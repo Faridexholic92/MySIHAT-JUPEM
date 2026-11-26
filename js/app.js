@@ -1,6 +1,6 @@
 /**
  * Pengawal Utama Antaramuka Pengguna (UI Controller)
- * Sistem Pengisytiharan Kesihatan Staf (Dwibahasa BM DBP / EN + Animasi Halus)
+ * MySIHAT-JUPEM — Bento UI, Borang 3 Langkah, Analitik Seksyen & Dwibahasa (BM DBP / EN)
  */
 (function (root) {
   'use strict';
@@ -19,10 +19,14 @@
     'Masalah Penglihatan / Pendengaran'
   ];
 
+  var RING_CIRCUMFERENCE = 113.1; // 2 * pi * 18
+  var DONUT_CIRCUMFERENCE = 276.46; // 2 * pi * 44
+
   var state = {
     session: null,
     activeView: 'login', // 'login' | 'staff-form' | 'admin'
     activeAdminTab: 'declarations', // 'declarations' | 'users'
+    currentFormStep: 1, // 1 | 2 | 3
     myDeclaration: null,
     adminRecords: [],
     lastCreatedCredentials: '',
@@ -65,6 +69,34 @@
     var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(isoDate));
     if (!m) return isoDate;
     return m[3] + '/' + m[2] + '/' + m[1];
+  }
+
+  function getInitials(name) {
+    var clean = String(name || '')
+      .replace(/\b(Sr|Dr|bin|binti|bte|a\/l|a\/p|anak)\b\.?/gi, ' ')
+      .replace(/[^a-zA-Z0-9\s]/g, ' ')
+      .trim();
+    if (!clean) return 'JK';
+    var parts = clean.split(/\s+/).filter(Boolean);
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+
+  function getAvatarColorClass(seedText) {
+    var sum = 0;
+    var str = String(seedText || '');
+    for (var i = 0; i < str.length; i += 1) {
+      sum += str.charCodeAt(i);
+    }
+    return 'av-' + (sum % 4);
+  }
+
+  function shortSectionLabel(sectionName) {
+    var s = String(sectionName || '').trim();
+    if (!s || s === '-') return '-';
+    return s
+      .replace(/^Cawangan\s+/i, '')
+      .replace(/^Seksyen\s+/i, '');
   }
 
   function showToast(message, type) {
@@ -169,6 +201,7 @@
       return (
         '<label class="condition-chip' + (isChecked ? ' checked' : '') + '">' +
         '<input type="checkbox" name="conditions" value="' + safeVal + '"' + (isChecked ? ' checked' : '') + ' />' +
+        '<span class="switch-pill" aria-hidden="true"></span>' +
         '<span>' + label + '</span>' +
         '</label>'
       );
@@ -176,7 +209,6 @@
   }
 
   function renderSelectOptions() {
-    // Penapis status di Admin
     var statusSelect = $('admin-filter-status');
     var currentStatus = statusSelect.value || 'ALL';
     var statusOptions = [
@@ -193,7 +225,6 @@
       .join('');
     statusSelect.value = currentStatus;
 
-    // Penapis penyakit di Admin
     var condSelect = $('admin-filter-condition');
     var currentCond = condSelect.value || 'ALL';
     condSelect.innerHTML =
@@ -203,7 +234,6 @@
       }).join('');
     condSelect.value = currentCond;
 
-    // Pilihan peranan dalam modal cipta akaun
     var roleSelect = $('cu-role');
     var currentRole = roleSelect.value || 'staff';
     roleSelect.innerHTML =
@@ -250,11 +280,11 @@
 
     var cfg = root.APP_CONFIG || {};
     var titleText = lang === 'ms' && cfg.APP_NAME ? cfg.APP_NAME : t('appTitle');
-    document.title = titleText;
+    document.title = 'MySIHAT-JUPEM — ' + titleText;
 
     document.querySelectorAll('[data-i18n]').forEach(function (el) {
       var key = el.dataset.i18n;
-      if (key === 'appTitle' || key === 'loginHeading') {
+      if (key === 'loginHeading') {
         el.textContent = titleText;
       } else if (key === 'appSubtitle' && lang === 'ms' && cfg.ORG_NAME) {
         el.textContent = cfg.ORG_NAME;
@@ -280,10 +310,11 @@
       if (state.activeView === 'staff-form') {
         updateStaffStatusBanner();
         updateICPreview($('hf-ic').value, false);
+        if (state.currentFormStep === 3) {
+          renderStep3Summary();
+        }
       } else if (state.activeView === 'admin') {
-        renderAdminKPIs();
-        renderAdminDeclarationsTable();
-        renderAdminUsersTable();
+        renderAdminAllSections();
         if (state.detailModalUserId && !$('modal-detail').classList.contains('hidden')) {
           showDeclarationDetailModal(state.detailModalUserId);
         }
@@ -316,6 +347,7 @@
     }
     $('topbar').classList.remove('hidden');
     $('user-display-name').textContent = profile.full_name || profile.username;
+    $('sidebar-user-name').textContent = profile.full_name || profile.username;
 
     var roleBadge = $('user-role-badge');
     if (profile.role === 'admin') {
@@ -353,6 +385,8 @@
       state.activeView = viewName;
     }
 
+    document.body.classList.toggle('in-admin-view', state.activeView === 'admin');
+
     var loginEl = $('view-login');
     var staffEl = $('view-staff-form');
     var adminEl = $('view-admin');
@@ -369,12 +403,97 @@
       replayAnimation(staffEl, 'view-animate');
       await loadStaffForm();
     } else if (state.activeView === 'admin') {
-      replayAnimation(adminEl, 'view-animate');
+      replayAnimation(adminEl.querySelector('.admin-main'), 'view-animate');
       await loadAdminView();
     }
   }
 
-  // ==================== PAPARAN BORANG STAF ====================
+  // ==================== BORANG KAKITANGAN 3 LANGKAH (MOCKUP 1) ====================
+
+  function validateStep1() {
+    setAlert('hf-step1-error', '');
+    var fullName = ($('hf-full-name').value || '').trim();
+    var parsedIC = updateICPreview($('hf-ic').value, true);
+    if (!fullName || fullName.length < 2 || !parsedIC.valid) {
+      setAlert('hf-step1-error', t('errStep1Incomplete'));
+      return false;
+    }
+    return true;
+  }
+
+  function validateStep2() {
+    setAlert('hf-step2-error', '');
+    var form = $('health-form');
+    var statusRadio = form.querySelector('input[name="health_status"]:checked');
+    if (!statusRadio) {
+      setAlert('hf-step2-error', t('errStep2Incomplete'));
+      return false;
+    }
+    var selectedConditions = form.querySelectorAll('input[name="conditions"]:checked');
+    var otherConditions = ($('hf-other-conditions').value || '').trim();
+    if (
+      (statusRadio.value === 'Mempunyai Masalah Kesihatan' ||
+        statusRadio.value === 'Dalam Pemantauan / Rawatan') &&
+      selectedConditions.length === 0 &&
+      !otherConditions
+    ) {
+      setAlert('hf-step2-error', t('errNeedConditionDetails'));
+      return false;
+    }
+    return true;
+  }
+
+  function renderStep3Summary() {
+    var form = $('health-form');
+    var parsed = root.ICParser.parseMalaysianIC($('hf-ic').value);
+    var statusRadio = form.querySelector('input[name="health_status"]:checked');
+    var statusVal = statusRadio ? statusRadio.value : '';
+    var selectedConditions = Array.prototype.slice
+      .call(form.querySelectorAll('input[name="conditions"]:checked'))
+      .map(function (cb) { return root.AppI18n.translateCondition(cb.value); });
+    var otherCond = ($('hf-other-conditions').value || '').trim();
+
+    var ageGenderText = parsed.valid
+      ? t('ageUnit', { age: parsed.age }) + ' • ' + root.AppI18n.translateGender(parsed.gender)
+      : '-';
+
+    var condSummary = selectedConditions.length > 0
+      ? selectedConditions.join(', ') + (otherCond ? ' (' + otherCond + ')' : '')
+      : (otherCond || t('noConditionsReported'));
+
+    $('hf-summary-grid').innerHTML =
+      '<div class="detail-item"><div class="detail-label">' + escapeHtml(t('summaryName')) + '</div><div class="detail-value">' + escapeHtml($('hf-full-name').value.trim() || '-') + '</div></div>' +
+      '<div class="detail-item"><div class="detail-label">' + escapeHtml(t('summaryIC')) + '</div><div class="detail-value mono">' + escapeHtml(parsed.valid ? parsed.formatted : '-') + '</div></div>' +
+      '<div class="detail-item"><div class="detail-label">' + escapeHtml(t('summaryAgeGender')) + '</div><div class="detail-value">' + escapeHtml(ageGenderText) + '</div></div>' +
+      '<div class="detail-item"><div class="detail-label">' + escapeHtml(t('summaryDept')) + '</div><div class="detail-value">' + escapeHtml($('hf-department').value.trim() || '-') + '</div></div>' +
+      '<div class="detail-item"><div class="detail-label">' + escapeHtml(t('summaryStatus')) + '</div><div class="detail-value">' + (statusVal ? statusBadgeHTML(statusVal) : '-') + '</div></div>' +
+      '<div class="detail-item"><div class="detail-label">' + escapeHtml(t('summaryConditions')) + '</div><div class="detail-value">' + escapeHtml(condSummary) + '</div></div>';
+  }
+
+  function setFormStep(stepNum) {
+    state.currentFormStep = stepNum;
+    [1, 2, 3].forEach(function (n) {
+      var panel = $('form-step-' + n);
+      panel.classList.toggle('hidden', n !== stepNum);
+      if (n === stepNum) replayAnimation(panel, 'view-animate');
+    });
+
+    document.querySelectorAll('#staff-stepper .stepper-btn').forEach(function (btn) {
+      var s = Number(btn.dataset.step);
+      btn.classList.toggle('active', s === stepNum);
+      btn.classList.toggle('completed', s < stepNum);
+      btn.setAttribute('aria-selected', s === stepNum ? 'true' : 'false');
+    });
+
+    var fill = $('stepper-track-fill');
+    if (fill) {
+      fill.setAttribute('width', String(stepNum * 100));
+    }
+
+    if (stepNum === 3) {
+      renderStep3Summary();
+    }
+  }
 
   function updateICPreview(rawValue, showInvalidError) {
     var parsed = root.ICParser.parseMalaysianIC(rawValue);
@@ -452,6 +571,8 @@
     form.reset();
     state.lastValidICDigits = '';
     setAlert('hf-error', '');
+    setAlert('hf-step1-error', '');
+    setAlert('hf-step2-error', '');
 
     if (declaration) {
       $('hf-full-name').value = declaration.full_name || profile.full_name || '';
@@ -481,6 +602,7 @@
     syncStatusRadioVisuals();
     syncConditionChipsVisuals();
     updateICPreview($('hf-ic').value, false);
+    setFormStep(1);
   }
 
   async function loadStaffForm() {
@@ -494,14 +616,178 @@
     }
   }
 
-  // ==================== PAPARAN PENTADBIR ====================
+  // ==================== ANALITIK & PENAPIS PENTADBIR (MOCKUPS 2 & 3) ====================
+
+  function computeSectionBreakdown(records) {
+    var map = {};
+    records.forEach(function (r) {
+      var sec = (r.department && r.department !== '-' ? r.department : '').trim() || '-';
+      if (!map[sec]) {
+        map[sec] = { name: sec, total: 0, declared: 0, pending: 0 };
+      }
+      map[sec].total += 1;
+      if (r.has_declared) {
+        map[sec].declared += 1;
+      } else {
+        map[sec].pending += 1;
+      }
+    });
+
+    return Object.keys(map)
+      .map(function (k) {
+        var item = map[k];
+        item.pct = item.total > 0 ? Math.round((item.declared / item.total) * 100) : 0;
+        return item;
+      })
+      .sort(function (a, b) {
+        if (a.name === '-') return 1;
+        if (b.name === '-') return -1;
+        return b.total - a.total;
+      });
+  }
+
+  function renderSectionFilterControls(sections) {
+    var secSelect = $('admin-filter-section');
+    var currentVal = secSelect.value || 'ALL';
+
+    secSelect.innerHTML =
+      '<option value="ALL">' + escapeHtml(t('filterAllSections')) + '</option>' +
+      sections
+        .filter(function (s) { return s.name !== '-'; })
+        .map(function (s) {
+          return '<option value="' + escapeHtml(s.name) + '">' + escapeHtml(s.name) + ' (' + s.declared + '/' + s.total + ')</option>';
+        })
+        .join('');
+
+    var exists = currentVal === 'ALL' || sections.some(function (s) { return s.name === currentVal; });
+    secSelect.value = exists ? currentVal : 'ALL';
+
+    var activeSection = secSelect.value;
+    var pillBar = $('section-pill-bar');
+    var pillsHtml =
+      '<button type="button" class="sec-pill' + (activeSection === 'ALL' ? ' active' : '') + '" data-section-pill="ALL">' +
+      escapeHtml(t('filterAllSections')) +
+      '</button>';
+
+    sections
+      .filter(function (s) { return s.name !== '-'; })
+      .slice(0, 6)
+      .forEach(function (s) {
+        pillsHtml +=
+          '<button type="button" class="sec-pill' + (activeSection === s.name ? ' active' : '') + '" data-section-pill="' + escapeHtml(s.name) + '">' +
+          escapeHtml(shortSectionLabel(s.name)) +
+          '</button>';
+      });
+    pillBar.innerHTML = pillsHtml;
+  }
+
+  function renderAdminAnalytics(sections) {
+    var total = state.adminRecords.length;
+    var activeCount = state.adminRecords.filter(function (r) { return r.profile.is_active; }).length;
+    var declared = state.adminRecords.filter(function (r) { return r.has_declared; }).length;
+    var undeclared = total - declared;
+    var healthy = state.adminRecords.filter(function (r) { return r.health_status === 'Sihat'; }).length;
+    var attention = state.adminRecords.filter(function (r) {
+      return (
+        r.health_status === 'Mempunyai Masalah Kesihatan' ||
+        r.health_status === 'Dalam Pemantauan / Rawatan'
+      );
+    }).length;
+
+    var declaredPct = total > 0 ? Math.round((declared / total) * 100) : 0;
+    var healthyPct = total > 0 ? healthy / total : 0;
+    var attentionPct = total > 0 ? attention / total : 0;
+
+    $('kpi-total-staff').textContent = String(total);
+    $('kpi-active-sub').textContent = t('kpiActiveSub', { count: activeCount });
+    $('kpi-total-ring').setAttribute('stroke-dashoffset', String(total > 0 ? 0 : RING_CIRCUMFERENCE));
+
+    $('kpi-declared').textContent = declared + ' / ' + total;
+    $('kpi-declared-sub').textContent = t('kpiDeclaredSub', { pct: declaredPct });
+    $('kpi-declared-pct').textContent = declaredPct + '%';
+    $('kpi-declared-ring').setAttribute(
+      'stroke-dashoffset',
+      (RING_CIRCUMFERENCE * (1 - (total > 0 ? declared / total : 0))).toFixed(2)
+    );
+
+    $('kpi-healthy').textContent = String(healthy);
+    $('kpi-healthy-ring').setAttribute(
+      'stroke-dashoffset',
+      (RING_CIRCUMFERENCE * (1 - healthyPct)).toFixed(2)
+    );
+
+    $('kpi-attention').textContent = String(attention);
+    $('kpi-undeclared-sub').textContent = t('kpiUndeclaredSub', { count: undeclared });
+    $('kpi-attention-ring').setAttribute(
+      'stroke-dashoffset',
+      (RING_CIRCUMFERENCE * (1 - attentionPct)).toFixed(2)
+    );
+
+    // Carta Bar Pematuhan Mengikut Seksyen (Interaktif)
+    var activeSec = $('admin-filter-section').value || 'ALL';
+    var barsList = $('section-compliance-list');
+    var visibleSections = sections.filter(function (s) { return s.name !== '-'; });
+    if (visibleSections.length === 0) {
+      visibleSections = sections;
+    }
+
+    barsList.innerHTML = visibleSections
+      .map(function (sec) {
+        var isSelected = activeSec === sec.name;
+        var barWidth = Math.max(0, Math.min(200, Math.round(sec.pct * 2)));
+        return (
+          '<button type="button" class="section-bar-btn' +
+          (isSelected ? ' active' : '') +
+          (sec.pct >= 70 ? ' has-good' : '') +
+          '" data-section-bar="' + escapeHtml(sec.name) + '" title="' + escapeHtml(sec.name) + '">' +
+          '<span class="section-bar-name">' + escapeHtml(shortSectionLabel(sec.name)) + '</span>' +
+          '<svg class="bar-svg" viewBox="0 0 200 10" preserveAspectRatio="none" aria-hidden="true">' +
+          '<rect class="bar-track" x="0" y="0" width="200" height="10" rx="5" />' +
+          '<rect class="bar-fill" x="0" y="0" width="' + barWidth + '" height="10" rx="5" />' +
+          '</svg>' +
+          '<span class="section-bar-stat">' + sec.pct + '% (' + sec.declared + '/' + sec.total + ')</span>' +
+          '</button>'
+        );
+      })
+      .join('');
+
+    // Carta Donat Taburan Status
+    $('donut-total-center').textContent = String(total);
+    if (total > 0) {
+      var lenHealthy = (healthy / total) * DONUT_CIRCUMFERENCE;
+      var lenAttention = (attention / total) * DONUT_CIRCUMFERENCE;
+      var lenPending = (undeclared / total) * DONUT_CIRCUMFERENCE;
+
+      $('donut-seg-healthy').setAttribute('stroke-dasharray', lenHealthy.toFixed(2) + ' ' + DONUT_CIRCUMFERENCE);
+      $('donut-seg-healthy').setAttribute('stroke-dashoffset', '0');
+
+      $('donut-seg-attention').setAttribute('stroke-dasharray', lenAttention.toFixed(2) + ' ' + DONUT_CIRCUMFERENCE);
+      $('donut-seg-attention').setAttribute('stroke-dashoffset', (-lenHealthy).toFixed(2));
+
+      $('donut-seg-pending').setAttribute('stroke-dasharray', lenPending.toFixed(2) + ' ' + DONUT_CIRCUMFERENCE);
+      $('donut-seg-pending').setAttribute('stroke-dashoffset', (-(lenHealthy + lenAttention)).toFixed(2));
+    } else {
+      ['donut-seg-healthy', 'donut-seg-attention', 'donut-seg-pending'].forEach(function (id) {
+        $(id).setAttribute('stroke-dasharray', '0 ' + DONUT_CIRCUMFERENCE);
+      });
+    }
+
+    $('donut-legend').innerHTML =
+      '<div class="legend-item"><span class="legend-left"><span class="legend-dot dot-emerald"></span>' + escapeHtml(t('chartLegendHealthy')) + '</span><strong>' + healthy + '</strong></div>' +
+      '<div class="legend-item"><span class="legend-left"><span class="legend-dot dot-amber"></span>' + escapeHtml(t('chartLegendAttention')) + '</span><strong>' + attention + '</strong></div>' +
+      '<div class="legend-item"><span class="legend-left"><span class="legend-dot dot-rose"></span>' + escapeHtml(t('chartLegendPending')) + '</span><strong>' + undeclared + '</strong></div>';
+  }
 
   function getFilteredDeclarations() {
     var search = ($('admin-search').value || '').trim().toLowerCase();
-    var statusFilter = $('admin-filter-status').value;
-    var condFilter = $('admin-filter-condition').value;
+    var sectionFilter = $('admin-filter-section').value || 'ALL';
+    var statusFilter = $('admin-filter-status').value || 'ALL';
+    var condFilter = $('admin-filter-condition').value || 'ALL';
 
     return state.adminRecords.filter(function (row) {
+      if (sectionFilter !== 'ALL' && row.department !== sectionFilter) {
+        return false;
+      }
       if (statusFilter !== 'ALL' && row.health_status !== statusFilter) {
         return false;
       }
@@ -535,34 +821,27 @@
     });
   }
 
-  function renderAdminKPIs() {
-    var total = state.adminRecords.length;
-    var activeCount = state.adminRecords.filter(function (r) { return r.profile.is_active; }).length;
-    var declared = state.adminRecords.filter(function (r) { return r.has_declared; }).length;
-    var undeclared = total - declared;
-    var healthy = state.adminRecords.filter(function (r) { return r.health_status === 'Sihat'; }).length;
-    var attention = state.adminRecords.filter(function (r) {
-      return (
-        r.health_status === 'Mempunyai Masalah Kesihatan' ||
-        r.health_status === 'Dalam Pemantauan / Rawatan'
-      );
-    }).length;
-
-    var pct = total > 0 ? Math.round((declared / total) * 100) : 0;
-
-    $('kpi-total-staff').textContent = String(total);
-    $('kpi-active-sub').textContent = t('kpiActiveSub', { count: activeCount });
-    $('kpi-declared').textContent = declared + ' / ' + total;
-    $('kpi-declared-sub').textContent = t('kpiDeclaredSub', { pct: pct });
-    $('kpi-healthy').textContent = String(healthy);
-    $('kpi-attention').textContent = String(attention);
-    $('kpi-undeclared-sub').textContent = t('kpiUndeclaredSub', { count: undeclared });
-  }
-
   function renderAdminDeclarationsTable() {
     var rows = getFilteredDeclarations();
     var tbody = $('admin-declarations-tbody');
     var empty = $('admin-declarations-empty');
+    var statusFilter = $('admin-filter-status').value || 'ALL';
+
+    var badgeEl = $('admin-result-badge');
+    if (statusFilter === 'Belum Mengisi') {
+      badgeEl.className = 'badge badge-rose';
+      badgeEl.textContent = t('badgeUndeclaredCount', { count: rows.length });
+    } else {
+      var pendingInView = rows.filter(function (r) { return !r.has_declared; }).length;
+      if (pendingInView > 0 && $('admin-filter-section').value !== 'ALL') {
+        badgeEl.className = 'badge badge-amber';
+        badgeEl.textContent =
+          t('badgeMatchedCount', { count: rows.length }) + ' • ' + t('badgeUndeclaredCount', { count: pendingInView });
+      } else {
+        badgeEl.className = 'badge badge-slate';
+        badgeEl.textContent = t('badgeMatchedCount', { count: rows.length });
+      }
+    }
 
     if (rows.length === 0) {
       tbody.innerHTML = '';
@@ -599,9 +878,8 @@
           }
         }
 
-        var ageGenderHTML = decl
-          ? '<div><strong>' + escapeHtml(t('ageUnit', { age: row.live_age })) + '</strong></div>' +
-            '<div class="cell-sub">' + escapeHtml(root.AppI18n.translateGender(row.gender)) + ' &bull; ' + escapeHtml(formatISODate(row.birth_date)) + '</div>'
+        var ageHTML = decl
+          ? '<span class="badge badge-slate">' + escapeHtml(t('ageShort', { age: row.live_age })) + '</span>'
           : '<span class="muted-sm">-</span>';
 
         var actionsHTML = decl
@@ -611,14 +889,23 @@
             '</div>'
           : '<span class="muted-sm">' + escapeHtml(t('waitingSubmission')) + '</span>';
 
+        var initials = getInitials(row.display_name);
+        var avClass = getAvatarColorClass(row.profile.username);
+
         return (
           '<tr>' +
           '<td>' +
+          '<div class="staff-cell-wrap">' +
+          '<span class="avatar-circle ' + avClass + '">' + escapeHtml(initials) + '</span>' +
+          '<div>' +
           '<div class="cell-main">' + escapeHtml(row.display_name) + '</div>' +
-          '<div class="cell-sub">@' + escapeHtml(row.profile.username) + ' &bull; ' + escapeHtml(row.department) + '</div>' +
+          '<div class="cell-sub mono">' + escapeHtml(row.profile.email || '@' + row.profile.username) + '</div>' +
+          '</div>' +
+          '</div>' +
           '</td>' +
+          '<td>' + escapeHtml(row.department) + '</td>' +
           '<td class="mono">' + escapeHtml(row.formatted_ic) + '</td>' +
-          '<td>' + ageGenderHTML + '</td>' +
+          '<td>' + ageHTML + '</td>' +
           '<td>' + statusBadgeHTML(row.health_status) + '</td>' +
           '<td>' + condHTML + '</td>' +
           '<td>' + (decl ? escapeHtml(formatDateTime(decl.updated_at || decl.submitted_at)) : '<span class="muted-sm">-</span>') + '</td>' +
@@ -673,12 +960,19 @@
           : '<span class="badge badge-amber">' + escapeHtml(t('badgeNotDeclared')) + '</span>';
 
         var toggleLabel = p.is_active ? t('btnDeactivate') : t('btnActivate');
+        var initials = getInitials(p.full_name || p.username);
+        var avClass = getAvatarColorClass(p.username);
 
         return (
           '<tr>' +
           '<td>' +
+          '<div class="staff-cell-wrap">' +
+          '<span class="avatar-circle ' + avClass + '">' + escapeHtml(initials) + '</span>' +
+          '<div>' +
           '<div class="cell-main">' + escapeHtml(p.full_name || p.username) + (isSelf ? ' <span class="muted-sm">' + escapeHtml(t('youTag')) + '</span>' : '') + '</div>' +
           '<div class="cell-sub mono">@' + escapeHtml(p.username) + (p.email ? ' &bull; ' + escapeHtml(p.email) : '') + '</div>' +
+          '</div>' +
+          '</div>' +
           '</td>' +
           '<td>' + escapeHtml(p.department || '-') + '</td>' +
           '<td>' + roleBadge + '</td>' +
@@ -699,12 +993,18 @@
       .join('');
   }
 
+  function renderAdminAllSections() {
+    var sections = computeSectionBreakdown(state.adminRecords);
+    renderSectionFilterControls(sections);
+    renderAdminAnalytics(sections);
+    renderAdminDeclarationsTable();
+    renderAdminUsersTable();
+  }
+
   async function loadAdminView() {
     try {
       state.adminRecords = await root.AppStore.getAdminDashboardData();
-      renderAdminKPIs();
-      renderAdminDeclarationsTable();
-      renderAdminUsersTable();
+      renderAdminAllSections();
     } catch (err) {
       showToast(root.AppI18n.translateStoreError(err), 'error');
     }
@@ -712,7 +1012,7 @@
 
   function switchAdminTab(tabName) {
     state.activeAdminTab = tabName;
-    document.querySelectorAll('.subtab').forEach(function (btn) {
+    document.querySelectorAll('.subtab[data-admin-tab], .sidebar-link[data-admin-tab]').forEach(function (btn) {
       btn.classList.toggle('active', btn.dataset.adminTab === tabName);
     });
     var declTab = $('admin-tab-declarations');
@@ -720,6 +1020,15 @@
     declTab.classList.toggle('hidden', tabName !== 'declarations');
     usersTab.classList.toggle('hidden', tabName !== 'users');
     replayAnimation(tabName === 'declarations' ? declTab : usersTab, 'view-animate');
+  }
+
+  function selectAdminSectionFilter(sectionName) {
+    var secSelect = $('admin-filter-section');
+    secSelect.value = sectionName;
+    var sections = computeSectionBreakdown(state.adminRecords);
+    renderSectionFilterControls(sections);
+    renderAdminAnalytics(sections);
+    renderAdminDeclarationsTable();
   }
 
   function showDeclarationDetailModal(userId) {
@@ -743,7 +1052,7 @@
     $('modal-detail-body').innerHTML =
       '<div class="detail-grid">' +
       '<div class="detail-item"><div class="detail-label">' + escapeHtml(t('detailFullName')) + '</div><div class="detail-value">' + escapeHtml(row.display_name) + '</div></div>' +
-      '<div class="detail-item"><div class="detail-label">' + escapeHtml(t('detailUserDept')) + '</div><div class="detail-value">@' + escapeHtml(row.profile.username) + ' &bull; ' + escapeHtml(row.department) + '</div></div>' +
+      '<div class="detail-item"><div class="detail-label">' + escapeHtml(t('detailUserDept')) + '</div><div class="detail-value">' + escapeHtml(row.profile.email || '@' + row.profile.username) + ' &bull; ' + escapeHtml(row.department) + '</div></div>' +
       '<div class="detail-item"><div class="detail-label">' + escapeHtml(t('detailIC')) + '</div><div class="detail-value mono">' + escapeHtml(row.formatted_ic) + '</div></div>' +
       '<div class="detail-item"><div class="detail-label">' + escapeHtml(t('detailAgeGenderDob')) + '</div><div class="detail-value"><strong>' + escapeHtml(t('ageUnit', { age: row.live_age })) + '</strong> &bull; ' + escapeHtml(root.AppI18n.translateGender(row.gender)) + ' &bull; ' + escapeHtml(formatISODate(row.birth_date)) + '</div></div>' +
       '<div class="detail-item"><div class="detail-label">' + escapeHtml(t('detailBirthState')) + '</div><div class="detail-value">' + escapeHtml(root.AppI18n.translateBirthState(row.birth_state)) + '</div></div>' +
@@ -773,6 +1082,7 @@
         idx + 1,
         r.display_name,
         r.profile.username,
+        r.profile.email || '-',
         r.department,
         d ? r.formatted_ic : '-',
         d ? formatISODate(r.birth_date) : '-',
@@ -796,7 +1106,6 @@
   // ==================== PENGIKATAN PERISTIWA (EVENTS) ====================
 
   function bindEvents() {
-    // Penukar bahasa BM / EN (diselaraskan pada kedua-dua paparan)
     document.querySelectorAll('.lang-btn[data-lang]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         var nextLang = btn.dataset.lang;
@@ -806,7 +1115,6 @@
       });
     });
 
-    // Papar / sembunyi kata laluan
     document.querySelectorAll('.toggle-pw-btn').forEach(function (btn) {
       btn.addEventListener('click', function () {
         var input = $(btn.dataset.target);
@@ -817,7 +1125,6 @@
       });
     });
 
-    // Butang isi pantas akaun simulasi
     document.querySelectorAll('.demo-fill-btn').forEach(function (btn) {
       btn.addEventListener('click', function () {
         $('login-username').value = btn.dataset.user || '';
@@ -836,7 +1143,6 @@
       switchView('login');
     });
 
-    // Log Masuk
     $('login-form').addEventListener('submit', async function (e) {
       e.preventDefault();
       setAlert('login-error', '');
@@ -866,28 +1172,31 @@
       }
     });
 
-    // Log Keluar
-    $('btn-logout').addEventListener('click', async function () {
+    async function handleLogout() {
       await root.AppStore.signOut();
       state.session = null;
       state.myDeclaration = null;
       state.adminRecords = [];
       showToast(t('loggedOutToast'));
       await switchView('login');
-    });
+    }
 
-    // Navigasi Bar Atas
+    $('btn-logout').addEventListener('click', handleLogout);
+    $('btn-sidebar-logout').addEventListener('click', handleLogout);
+
+    function openOwnPasswordModal() {
+      $('form-change-own-pw').reset();
+      setAlert('op-error', '');
+      openModal('modal-change-own-pw');
+    }
+
+    $('btn-open-change-pw').addEventListener('click', openOwnPasswordModal);
+    $('btn-sidebar-change-pw').addEventListener('click', openOwnPasswordModal);
+
     $('topbar-nav').addEventListener('click', function (e) {
       var btn = e.target.closest('[data-nav]');
       if (!btn) return;
       switchView(btn.dataset.nav);
-    });
-
-    // Tukar kata laluan sendiri
-    $('btn-open-change-pw').addEventListener('click', function () {
-      $('form-change-own-pw').reset();
-      setAlert('op-error', '');
-      openModal('modal-change-own-pw');
     });
 
     $('form-change-own-pw').addEventListener('submit', async function (e) {
@@ -914,7 +1223,34 @@
       }
     });
 
-    // Pengiraan automatik Kad Pengenalan secara masa nyata
+    // Stepper & Borang Kakitangan 3 Langkah
+    $('btn-step1-next').addEventListener('click', function () {
+      if (validateStep1()) setFormStep(2);
+    });
+    $('btn-step2-prev').addEventListener('click', function () {
+      setFormStep(1);
+    });
+    $('btn-step2-next').addEventListener('click', function () {
+      if (validateStep2()) setFormStep(3);
+    });
+    $('btn-step3-prev').addEventListener('click', function () {
+      setFormStep(2);
+    });
+
+    document.querySelectorAll('#staff-stepper .stepper-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var targetStep = Number(btn.dataset.step);
+        if (targetStep === state.currentFormStep) return;
+        if (targetStep === 1) {
+          setFormStep(1);
+        } else if (targetStep === 2) {
+          if (validateStep1()) setFormStep(2);
+        } else if (targetStep === 3) {
+          if (validateStep1() && validateStep2()) setFormStep(3);
+        }
+      });
+    });
+
     $('hf-ic').addEventListener('input', function (e) {
       updateICPreview(e.target.value, false);
     });
@@ -941,10 +1277,18 @@
       syncConditionChipsVisuals();
     });
 
-    // Hantar / Kemas Kini Borang Kesihatan Staf
     $('health-form').addEventListener('submit', async function (e) {
       e.preventDefault();
       setAlert('hf-error', '');
+
+      if (!validateStep1()) {
+        setFormStep(1);
+        return;
+      }
+      if (!validateStep2()) {
+        setFormStep(2);
+        return;
+      }
 
       var form = e.target;
       var statusRadio = form.querySelector('input[name="health_status"]:checked');
@@ -952,17 +1296,7 @@
       var selectedConditions = Array.prototype.slice
         .call(form.querySelectorAll('input[name="conditions"]:checked'))
         .map(function (cb) { return cb.value; });
-
       var otherConditions = $('hf-other-conditions').value.trim();
-
-      if (
-        (healthStatus === 'Mempunyai Masalah Kesihatan' || healthStatus === 'Dalam Pemantauan / Rawatan') &&
-        selectedConditions.length === 0 &&
-        !otherConditions
-      ) {
-        setAlert('hf-error', t('errNeedConditionDetails'));
-        return;
-      }
 
       var btn = $('btn-save-declaration');
       btn.disabled = true;
@@ -997,9 +1331,15 @@
 
     // ==================== PERISTIWA PENTADBIR ====================
 
-    document.querySelectorAll('.subtab[data-admin-tab]').forEach(function (tabBtn) {
+    document.querySelectorAll('.subtab[data-admin-tab], .sidebar-link[data-admin-tab]').forEach(function (tabBtn) {
       tabBtn.addEventListener('click', function () {
         switchAdminTab(tabBtn.dataset.adminTab);
+      });
+    });
+
+    document.querySelectorAll('.sidebar-link[data-nav]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        switchView(btn.dataset.nav);
       });
     });
 
@@ -1011,7 +1351,26 @@
     $('admin-search').addEventListener('input', renderAdminDeclarationsTable);
     $('admin-filter-status').addEventListener('change', renderAdminDeclarationsTable);
     $('admin-filter-condition').addEventListener('change', renderAdminDeclarationsTable);
+    $('admin-filter-section').addEventListener('change', function (e) {
+      selectAdminSectionFilter(e.target.value);
+    });
     $('admin-user-search').addEventListener('input', renderAdminUsersTable);
+
+    // Klik bar carta seksyen atau cip pantas seksyen
+    $('section-compliance-list').addEventListener('click', function (e) {
+      var btn = e.target.closest('[data-section-bar]');
+      if (!btn) return;
+      var clicked = btn.dataset.sectionBar;
+      var current = $('admin-filter-section').value;
+      selectAdminSectionFilter(current === clicked ? 'ALL' : clicked);
+      switchAdminTab('declarations');
+    });
+
+    $('section-pill-bar').addEventListener('click', function (e) {
+      var pill = e.target.closest('[data-section-pill]');
+      if (!pill) return;
+      selectAdminSectionFilter(pill.dataset.sectionPill);
+    });
 
     $('btn-export-csv').addEventListener('click', function () {
       var ds = buildExportDataset();
@@ -1022,7 +1381,7 @@
       var csv = root.CSVExport.buildCSV(ds.headers, ds.rows);
       var dateStamp = new Date().toISOString().slice(0, 10);
       root.CSVExport.triggerDownload(
-        'pengisytiharan-kesihatan-staf-' + dateStamp + '.csv',
+        'pengisytiharan-kesihatan-kakitangan-' + dateStamp + '.csv',
         csv,
         'text/csv;charset=utf-8;'
       );
@@ -1038,7 +1397,7 @@
       var xml = root.CSVExport.buildExcelXML(t('exportSheetName'), ds.headers, ds.rows);
       var dateStamp = new Date().toISOString().slice(0, 10);
       root.CSVExport.triggerDownload(
-        'pengisytiharan-kesihatan-staf-' + dateStamp + '.xls',
+        'pengisytiharan-kesihatan-kakitangan-' + dateStamp + '.xls',
         xml,
         'application/vnd.ms-excel;charset=utf-8;'
       );

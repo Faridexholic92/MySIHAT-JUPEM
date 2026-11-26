@@ -11,7 +11,7 @@
   'use strict';
 
   var APP_CONFIG = {
-    APP_NAME: 'Sistem Pengisytiharan Kesihatan Staf',
+    APP_NAME: 'Sistem Pengisytiharan Kesihatan Kakitangan',
     ORG_NAME: 'JUPEM',
     SUPABASE_URL: 'https://xnkydlqrypfgczgehhyr.supabase.co',
     SUPABASE_ANON_KEY: 'sb_publishable_uaDsWxeuTuBt7o0lFykshA_7ptuSNSI',

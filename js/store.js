@@ -585,7 +585,7 @@
     }
     var fullName = String(input.full_name || '').trim();
     if (!fullName) {
-      throw makeError('INVALID_FULLNAME', 'Sila masukkan Nama Penuh staf.');
+      throw makeError('INVALID_FULLNAME', 'Sila masukkan Nama Penuh kakitangan.');
     }
     var cfg = getConfig();
     var rawEmail = String(input.email || '').trim().toLowerCase();
@@ -642,7 +642,7 @@
     });
 
     if (res.error) {
-      throw await extractEdgeFunctionError(res.error, 'Gagal mencipta akaun staf.');
+      throw await extractEdgeFunctionError(res.error, 'Gagal mencipta akaun kakitangan.');
     }
     return res.data && res.data.user ? res.data.user : res.data;
   }
@@ -729,7 +729,7 @@
     });
 
     if (res.error) {
-      throw await extractEdgeFunctionError(res.error, 'Gagal memadam akaun staf.');
+      throw await extractEdgeFunctionError(res.error, 'Gagal memadam akaun kakitangan.');
     }
     return true;
   }

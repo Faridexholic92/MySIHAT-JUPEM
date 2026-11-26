@@ -1,19 +1,20 @@
-# MySIHAT-JUPEM — Sistem Pengisytiharan Kesihatan Staf
+# MySIHAT-JUPEM — Sistem Pengisytiharan Kesihatan Kakitangan
 
-Aplikasi web statik (HTML, CSS, dan JavaScript) yang dihubungkan ke **Supabase** untuk pengurusan pengisytiharan kesihatan staf dalam dwibahasa (**Bahasa Melayu baku mengikut Dewan Bahasa dan Pustaka** serta **Bahasa Inggeris**).
+Aplikasi web statik (HTML, CSS, dan JavaScript) yang dihubungkan ke **Supabase** untuk pengurusan pengisytiharan kesihatan kakitangan dalam dwibahasa (**Bahasa Melayu baku mengikut Dewan Bahasa dan Pustaka** serta **Bahasa Inggeris**).
 
 ## Ciri-ciri Utama
 
-- **Dwibahasa (BM / EN) serta Animasi Halus:** Penukar bahasa `BM | EN` disediakan pada skrin log masuk dan bar navigasi atas, berserta animasi peralihan paparan, kad KPI, kiraan automatik Kad Pengenalan, modal, dan pemberitahuan.
-- **Log Masuk Staf dan Pentadbir (Tiada Pendaftaran Sendiri):** Hanya Pentadbir dibenarkan mencipta akaun staf (ID Pengguna dan Kata Laluan).
-- **Kiraan Automatik Nombor Kad Pengenalan Malaysia:** Apabila staf memasukkan Nombor Kad Pengenalan (`YYMMDD-PB-###G`), sistem terus mengesahkan dan mengira **Umur**, **Tarikh Lahir**, **Jantina**, dan **Negeri Kelahiran**.
-- **Privasi Terjamin (Row Level Security):** Staf hanya dapat melihat, mengisi, dan mengemas kini pengisytiharan kesihatan **milik sendiri sahaja**. Hanya **Pentadbir** boleh melihat rekod semua staf.
-- **Maklumat Kesihatan Lengkap:** Status kesihatan (`Sihat`, `Dalam Pemantauan atau Rawatan`, `Mempunyai Masalah Kesihatan`), senarai penyakit lazim, penyakit lain, ubat-ubatan yang sedang diambil, maklumat waris kecemasan, dan catatan tambahan.
-- **Panel Pentadbir:**
-  - Kad ringkasan statistik staf (jumlah akaun, sudah atau belum mengisi, status sihat, dan masalah kesihatan).
-  - Jadual semua staf dengan carian serta penapis mengikut status kesihatan atau penyakit.
+- **Dwibahasa (BM / EN) serta Animasi Halus:** Penukar bahasa `BM | EN` disediakan pada skrin log masuk dan bar navigasi, berserta animasi peralihan paparan, kad KPI, kiraan automatik Kad Pengenalan, modal, dan pemberitahuan.
+- **Log Masuk Kakitangan dan Pentadbir (Tiada Pendaftaran Sendiri):** Hanya Pentadbir dibenarkan mencipta akaun kakitangan (ID Pengguna / E-mel Rasmi dan Kata Laluan).
+- **Kiraan Automatik Nombor Kad Pengenalan Malaysia:** Apabila kakitangan memasukkan Nombor Kad Pengenalan (`YYMMDD-PB-###G`), sistem terus mengesahkan dan mengira **Umur**, **Tarikh Lahir**, **Jantina**, dan **Negeri Kelahiran**.
+- **Privasi Terjamin (Row Level Security):** Kakitangan hanya dapat melihat, mengisi, dan mengemas kini pengisytiharan kesihatan **milik sendiri sahaja**. Hanya **Pentadbir** boleh melihat rekod semua kakitangan.
+- **Borang 3 Langkah & Maklumat Kesihatan Lengkap:** Status kesihatan (`Sihat`, `Dalam Pemantauan atau Rawatan`, `Mempunyai Masalah Kesihatan`), senarai penyakit lazim, penyakit lain, ubat-ubatan yang sedang diambil, maklumat waris kecemasan, dan catatan tambahan.
+- **Panel Pentadbir Bento UI:**
+  - Kad ringkasan statistik kakitangan dengan lingkaran kemajuan (*progress ring*).
+  - Carta pematuhan mengikut seksyen/cawangan yang boleh diklik berserta carta donat taburan status.
+  - Penapis **Seksyen** dan **Belum Mengisi** untuk mengesan kakitangan yang belum menghantar borang mengikut seksyen.
   - Eksport laporan ke **CSV (UTF-8)**, **Excel (`.xls`)**, atau **Cetak**.
-  - Pengurusan akaun staf: tambah akaun, jana kata laluan rawak, set semula kata laluan, aktif atau nyahaktifkan akaun, dan padam akaun.
+  - Pengurusan akaun kakitangan: tambah akaun, jana kata laluan rawak, set semula kata laluan, aktif atau nyahaktifkan akaun, dan padam akaun.
 
 ---
 
@@ -32,8 +33,8 @@ Kemudian buka pelayar web dan layari `http://localhost:8080`.
 
 Akaun ujian sedia ada:
 - **Pentadbir:** `admin` / `Admin@1234`
-- **Staf (Sudah mengisi):** `aminah` / `Staf@1234`
-- **Staf (Belum mengisi):** `farid` / `Staf@1234`
+- **Kakitangan (Sudah mengisi):** `aminah` / `Staf@1234`
+- **Kakitangan (Belum mengisi):** `farid` / `Staf@1234`
 
 ---
 
@@ -66,7 +67,7 @@ Akaun ujian sedia ada:
    ```
 
 ### Langkah 5: Pasang Edge Function `admin-users`
-Fungsi [supabase/functions/admin-users/index.ts](supabase/functions/admin-users/index.ts) membolehkan Pentadbir menambah staf, menetapkan semula kata laluan, menyahaktifkan, dan memadamkan akaun secara terus melalui Panel Pentadbir.
+Fungsi [supabase/functions/admin-users/index.ts](supabase/functions/admin-users/index.ts) membolehkan Pentadbir menambah kakitangan, menetapkan semula kata laluan, menyahaktifkan, dan memadamkan akaun secara terus melalui Panel Pentadbir.
 
 **Cara A — Melalui Supabase CLI:**
 ```powershell

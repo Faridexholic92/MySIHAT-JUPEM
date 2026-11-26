@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MySIHAT-JUPEM — Sistem Pengisytiharan Kesihatan Staf</title>
-  <meta name="description" content="Portal rasmi pengisytiharan kesihatan dalaman bagi staf Jabatan Ukur dan Pemetaan Malaysia (JUPEM)." />
+  <title>MySIHAT-JUPEM — Sistem Pengisytiharan Kesihatan Kakitangan</title>
+  <meta name="description" content="Portal rasmi pengisytiharan kesihatan dalaman bagi kakitangan Jabatan Ukur dan Pemetaan Malaysia (JUPEM)." />
   <meta name="robots" content="noindex, nofollow, noarchive" />
   <meta name="theme-color" content="#0f766e" />
   <link rel="canonical" href="https://mysihatjupem.dpdns.org/" />
@@ -14,12 +14,12 @@
   <meta property="og:type" content="website" />
   <meta property="og:locale" content="ms_MY" />
   <meta property="og:site_name" content="MySIHAT-JUPEM" />
-  <meta property="og:title" content="MySIHAT-JUPEM — Sistem Pengisytiharan Kesihatan Staf" />
-  <meta property="og:description" content="Portal rasmi pengisytiharan dan pemantauan rekod kesihatan dalaman staf JUPEM." />
+  <meta property="og:title" content="MySIHAT-JUPEM — Sistem Pengisytiharan Kesihatan Kakitangan" />
+  <meta property="og:description" content="Portal rasmi pengisytiharan dan pemantauan rekod kesihatan dalaman kakitangan JUPEM." />
   <meta property="og:url" content="https://mysihatjupem.dpdns.org/" />
   <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="MySIHAT-JUPEM — Sistem Pengisytiharan Kesihatan Staf" />
-  <meta name="twitter:description" content="Portal rasmi pengisytiharan dan pemantauan rekod kesihatan dalaman staf JUPEM." />
+  <meta name="twitter:title" content="MySIHAT-JUPEM — Sistem Pengisytiharan Kesihatan Kakitangan" />
+  <meta name="twitter:description" content="Portal rasmi pengisytiharan dan pemantauan rekod kesihatan dalaman kakitangan JUPEM." />
 
   <link rel="stylesheet" href="css/styles.css" />
   <script
@@ -51,7 +51,7 @@
     </div>
   </div>
 
-  <!-- Bar Navigasi Atas (Dipaparkan selepas log masuk) -->
+  <!-- Bar Navigasi Atas (Untuk Kakitangan & Paparan Mudah Alih Pentadbir) -->
   <header id="topbar" class="topbar hidden">
     <div class="container topbar-inner">
       <div class="brand">
@@ -62,8 +62,8 @@
           </svg>
         </div>
         <div>
-          <div id="brand-title" class="brand-title" data-i18n="appTitle">Sistem Pengisytiharan Kesihatan Staf</div>
-          <div id="brand-subtitle" class="brand-subtitle" data-i18n="appSubtitle">Portal Kesihatan Dalaman</div>
+          <div id="brand-title" class="brand-title" data-i18n="appShortTitle">MySIHAT-JUPEM</div>
+          <div id="brand-subtitle" class="brand-subtitle" data-i18n="appSubtitle">JUPEM</div>
         </div>
       </div>
 
@@ -75,7 +75,7 @@
           <button type="button" class="lang-btn" data-lang="en">EN</button>
         </div>
         <div class="user-chip">
-          <span id="user-role-badge" class="badge badge-teal">Staf</span>
+          <span id="user-role-badge" class="badge badge-teal">Kakitangan</span>
           <span id="user-display-name" class="user-chip-name">-</span>
         </div>
         <button type="button" id="btn-open-change-pw" class="btn btn-sm btn-ghost" data-i18n="changeOwnPwBtn">
@@ -92,107 +92,113 @@
     <!-- ==================== PAPARAN LOG MASUK ==================== -->
     <section id="view-login" class="login-wrapper">
       <div class="login-card card">
-        <div class="login-top-bar">
-          <span class="login-portal-tag" data-i18n="appSubtitle">Portal Kesihatan Dalaman</span>
-          <div class="lang-switch" role="group" aria-label="Pilihan Bahasa">
-            <button type="button" class="lang-btn active" data-lang="ms">BM</button>
-            <button type="button" class="lang-btn" data-lang="en">EN</button>
-          </div>
-        </div>
-
-        <div class="login-header">
-          <div class="login-logo" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 21s-7-4.35-9.5-8.5C.7 9.4 2.2 5.5 5.8 4.4c2.1-.6 4.4.1 6.2 1.9 1.8-1.8 4.1-2.5 6.2-1.9 3.6 1.1 5.1 5 3.3 8.1C19 16.65 12 21 12 21z"/>
-              <path d="M9.5 11.5h5M12 9v5"/>
-            </svg>
-          </div>
-          <h1 id="login-app-title" data-i18n="loginHeading">Sistem Pengisytiharan Kesihatan Staf</h1>
-          <p class="muted" data-i18n="loginSubheading">
-            Sila log masuk untuk mengisi atau mengemas kini maklumat kesihatan anda.
-          </p>
-        </div>
-
-        <form id="login-form" class="stack-md" novalidate>
-          <div class="field">
-            <label for="login-username" data-i18n="loginUsernameLabel">E-mel Rasmi (@jupem.gov.my) atau ID Pengguna</label>
-            <input
-              type="text"
-              id="login-username"
-              name="username"
-              autocomplete="username"
-              data-i18n-placeholder="loginUsernamePlaceholder"
-              placeholder="Contoh: nama@jupem.gov.my atau nama"
-              required
-            />
-          </div>
-
-          <div class="field">
-            <label for="login-password" data-i18n="loginPasswordLabel">Kata Laluan</label>
-            <div class="password-input-wrap">
-              <input
-                type="password"
-                id="login-password"
-                name="password"
-                autocomplete="current-password"
-                data-i18n-placeholder="loginPasswordPlaceholder"
-                placeholder="Masukkan kata laluan anda"
-                required
-              />
-              <button
-                type="button"
-                class="toggle-pw-btn"
-                data-target="login-password"
-                aria-label="Tunjuk atau sembunyi kata laluan"
-              >
-                Papar
-              </button>
+        <div class="login-hero-band">
+          <div class="login-top-bar">
+            <span class="login-portal-tag" data-i18n="appSubtitle">JUPEM</span>
+            <div class="lang-switch lang-switch-light" role="group" aria-label="Pilihan Bahasa">
+              <button type="button" class="lang-btn active" data-lang="ms">BM</button>
+              <button type="button" class="lang-btn" data-lang="en">EN</button>
             </div>
           </div>
 
-          <div id="login-error" class="alert alert-error hidden" role="alert"></div>
-
-          <button type="submit" id="btn-login-submit" class="btn btn-primary btn-block" data-i18n="loginSubmitBtn">
-            Log Masuk
-          </button>
-        </form>
-
-        <div class="login-notice">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-          </svg>
-          <span data-i18n="loginNotice">
-            Akses terhad kepada staf berdaftar sahaja. Akaun dan kata laluan hanya disediakan oleh Pentadbir.
-          </span>
+          <div class="login-header">
+            <div class="login-logo" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 21s-7-4.35-9.5-8.5C.7 9.4 2.2 5.5 5.8 4.4c2.1-.6 4.4.1 6.2 1.9 1.8-1.8 4.1-2.5 6.2-1.9 3.6 1.1 5.1 5 3.3 8.1C19 16.65 12 21 12 21z"/>
+                <path d="M9.5 11.5h5M12 9v5"/>
+              </svg>
+            </div>
+            <div class="login-brand-eyebrow" data-i18n="appShortTitle">MySIHAT-JUPEM</div>
+            <h1 id="login-app-title" data-i18n="loginHeading">Sistem Pengisytiharan Kesihatan Kakitangan</h1>
+          </div>
         </div>
 
-        <!-- Kotak Akaun Simulasi (Hanya muncul apabila dalam Mod Simulasi Tempatan) -->
-        <div id="demo-quick-login" class="demo-box hidden">
-          <div class="demo-box-title" data-i18n="demoBoxTitle">Akaun Ujian (Mod Simulasi Tempatan)</div>
-          <p class="demo-box-desc" data-i18n="demoBoxDesc">
-            Klik mana-mana akaun di bawah untuk mengisi ruangan log masuk secara automatik:
+        <div class="login-body">
+          <p class="muted login-sub" data-i18n="loginSubheading">
+            Sila log masuk untuk mengisi atau mengemas kini maklumat kesihatan anda.
           </p>
-          <div class="demo-btn-group">
-            <button type="button" class="btn btn-xs btn-outline demo-fill-btn" data-user="admin" data-pass="Admin@1234" data-i18n="demoBtnAdmin">
-              Pentadbir (admin)
+
+          <form id="login-form" class="stack-md" novalidate>
+            <div class="field">
+              <label for="login-username" data-i18n="loginUsernameLabel">E-mel Rasmi (@jupem.gov.my) atau ID Pengguna</label>
+              <input
+                type="text"
+                id="login-username"
+                name="username"
+                autocomplete="username"
+                data-i18n-placeholder="loginUsernamePlaceholder"
+                placeholder="Contoh: nama@jupem.gov.my atau nama"
+                required
+              />
+            </div>
+
+            <div class="field">
+              <label for="login-password" data-i18n="loginPasswordLabel">Kata Laluan</label>
+              <div class="password-input-wrap">
+                <input
+                  type="password"
+                  id="login-password"
+                  name="password"
+                  autocomplete="current-password"
+                  data-i18n-placeholder="loginPasswordPlaceholder"
+                  placeholder="Masukkan kata laluan anda"
+                  required
+                />
+                <button
+                  type="button"
+                  class="toggle-pw-btn"
+                  data-target="login-password"
+                  aria-label="Tunjuk atau sembunyi kata laluan"
+                >
+                  Papar
+                </button>
+              </div>
+            </div>
+
+            <div id="login-error" class="alert alert-error hidden" role="alert"></div>
+
+            <button type="submit" id="btn-login-submit" class="btn btn-primary btn-block" data-i18n="loginSubmitBtn">
+              Log Masuk
             </button>
-            <button type="button" class="btn btn-xs btn-outline demo-fill-btn" data-user="aminah" data-pass="Staf@1234" data-i18n="demoBtnStaffDone">
-              Staf Sudah Mengisi (aminah)
-            </button>
-            <button type="button" class="btn btn-xs btn-outline demo-fill-btn" data-user="farid" data-pass="Staf@1234" data-i18n="demoBtnStaffPending">
-              Staf Belum Mengisi (farid)
-            </button>
+          </form>
+
+          <div class="login-notice">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            <span data-i18n="loginNotice">
+              Akses terhad kepada kakitangan berdaftar sahaja. Akaun dan kata laluan hanya disediakan oleh Pentadbir.
+            </span>
+          </div>
+
+          <!-- Kotak Akaun Simulasi (Hanya muncul apabila dalam Mod Simulasi Tempatan) -->
+          <div id="demo-quick-login" class="demo-box hidden">
+            <div class="demo-box-title" data-i18n="demoBoxTitle">Akaun Ujian (Mod Simulasi Tempatan)</div>
+            <p class="demo-box-desc" data-i18n="demoBoxDesc">
+              Klik mana-mana akaun di bawah untuk mengisi ruangan log masuk secara automatik:
+            </p>
+            <div class="demo-btn-group">
+              <button type="button" class="btn btn-xs btn-outline demo-fill-btn" data-user="admin" data-pass="Admin@1234" data-i18n="demoBtnAdmin">
+                Pentadbir (admin)
+              </button>
+              <button type="button" class="btn btn-xs btn-outline demo-fill-btn" data-user="aminah" data-pass="Staf@1234" data-i18n="demoBtnStaffDone">
+                Kakitangan Sudah Mengisi (aminah)
+              </button>
+              <button type="button" class="btn btn-xs btn-outline demo-fill-btn" data-user="farid" data-pass="Staf@1234" data-i18n="demoBtnStaffPending">
+                Kakitangan Belum Mengisi (farid)
+              </button>
+            </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ==================== PAPARAN BORANG PENGISYTIHARAN STAF ==================== -->
+    <!-- ==================== PAPARAN BORANG KAKITANGAN (3 LANGKAH BENTO) ==================== -->
     <section id="view-staff-form" class="container section-pad hidden">
       <div class="page-head">
         <div>
-          <h1 data-i18n="staffPageTitle">Pengisytiharan Kesihatan Staf</h1>
+          <h1 data-i18n="staffPageTitle">Pengisytiharan Kesihatan Kakitangan</h1>
           <p class="muted" data-i18n="staffPageDesc">
             Maklumat anda adalah sulit dan hanya dapat dilihat oleh anda sendiri serta Pentadbir yang diberi kuasa.
           </p>
@@ -202,9 +208,33 @@
 
       <div id="staff-status-banner" class="alert alert-info hidden"></div>
 
+      <!-- Bar Kemajuan 3 Langkah -->
+      <div id="staff-stepper" class="stepper-card card" role="tablist" aria-label="Langkah Pengisian">
+        <div class="stepper-track" aria-hidden="true">
+          <svg class="stepper-track-svg" viewBox="0 0 300 6" preserveAspectRatio="none">
+            <rect class="stepper-track-bg" x="0" y="0" width="300" height="6" rx="3" />
+            <rect id="stepper-track-fill" class="stepper-track-fill" x="0" y="0" width="100" height="6" rx="3" />
+          </svg>
+        </div>
+        <div class="stepper-steps">
+          <button type="button" class="stepper-btn active" data-step="1" role="tab" aria-selected="true">
+            <span class="stepper-num">1</span>
+            <span class="stepper-label" data-i18n="step1Short">Maklumat Diri &amp; KP</span>
+          </button>
+          <button type="button" class="stepper-btn" data-step="2" role="tab" aria-selected="false">
+            <span class="stepper-num">2</span>
+            <span class="stepper-label" data-i18n="step2Short">Status &amp; Penyakit</span>
+          </button>
+          <button type="button" class="stepper-btn" data-step="3" role="tab" aria-selected="false">
+            <span class="stepper-num">3</span>
+            <span class="stepper-label" data-i18n="step3Short">Semak &amp; Hantar</span>
+          </button>
+        </div>
+      </div>
+
       <form id="health-form" class="card form-card stack-lg" novalidate>
-        <!-- Bahagian 1: Maklumat Peribadi & Pengesahan Kad Pengenalan -->
-        <div class="form-section">
+        <!-- Langkah 1: Maklumat Peribadi & Kad Pengenalan -->
+        <div id="form-step-1" class="form-section form-step-panel">
           <div class="form-section-head">
             <span class="step-pill">1</span>
             <div>
@@ -246,7 +276,7 @@
             </div>
           </div>
 
-          <!-- Kad Paparan Kiraan Automatik daripada Nombor Kad Pengenalan -->
+          <!-- Kad Paparan Kiraan Automatik Kad Pengenalan (4 Cip Bento) -->
           <div id="ic-preview-card" class="ic-preview-card">
             <div class="ic-preview-item">
               <span class="ic-preview-label" data-i18n="icOutAgeLabel">Umur (Kiraan Automatik)</span>
@@ -261,7 +291,7 @@
               <strong id="ic-out-gender" class="ic-preview-value">-</strong>
             </div>
             <div class="ic-preview-item">
-              <span class="ic-preview-label" data-i18n="icOutStateLabel">Negeri Kelahiran (Kod KP)</span>
+              <span class="ic-preview-label" data-i18n="icOutStateLabel">Negeri Kelahiran</span>
               <strong id="ic-out-state" class="ic-preview-value">-</strong>
             </div>
           </div>
@@ -269,14 +299,21 @@
 
           <div class="grid-2">
             <div class="field">
-              <label for="hf-department" data-i18n="deptLabel">Bahagian / Unit</label>
+              <label for="hf-department" data-i18n="deptLabel">Cawangan / Seksyen / Unit</label>
               <input
                 type="text"
                 id="hf-department"
                 name="department"
+                list="dept-suggestions"
                 data-i18n-placeholder="deptPlaceholder"
-                placeholder="Contoh: Unit Teknologi Maklumat / Sumber Manusia"
+                placeholder="Contoh: Seksyen Penawanan Data"
               />
+              <datalist id="dept-suggestions">
+                <option value="Cawangan Pentadbiran Dan Kewangan"></option>
+                <option value="Seksyen Pengurusan Maklumat Geospatial"></option>
+                <option value="Seksyen Penawanan Data"></option>
+                <option value="Seksyen Pangkalan Data Topografi"></option>
+              </datalist>
             </div>
             <div class="field">
               <label for="hf-phone" data-i18n="phoneLabel">Nombor Telefon Bimbit</label>
@@ -289,12 +326,19 @@
               />
             </div>
           </div>
+
+          <div id="hf-step1-error" class="alert alert-error hidden" role="alert"></div>
+
+          <div class="step-actions">
+            <span></span>
+            <button type="button" id="btn-step1-next" class="btn btn-primary" data-i18n="btnNextStep">
+              Seterusnya
+            </button>
+          </div>
         </div>
 
-        <hr class="divider" />
-
-        <!-- Bahagian 2: Status Kesihatan dan Rekod Penyakit -->
-        <div class="form-section">
+        <!-- Langkah 2: Status Kesihatan dan Rekod Penyakit -->
+        <div id="form-step-2" class="form-section form-step-panel hidden">
           <div class="form-section-head">
             <span class="step-pill">2</span>
             <div>
@@ -391,12 +435,33 @@
               />
             </div>
           </div>
+
+          <div id="hf-step2-error" class="alert alert-error hidden" role="alert"></div>
+
+          <div class="step-actions">
+            <button type="button" id="btn-step2-prev" class="btn btn-outline" data-i18n="btnPrevStep">
+              Kembali
+            </button>
+            <button type="button" id="btn-step2-next" class="btn btn-primary" data-i18n="btnNextStep">
+              Seterusnya
+            </button>
+          </div>
         </div>
 
-        <hr class="divider" />
+        <!-- Langkah 3: Semakan Akhir dan Perakuan -->
+        <div id="form-step-3" class="form-section form-step-panel hidden">
+          <div class="form-section-head">
+            <span class="step-pill">3</span>
+            <div>
+              <h2 data-i18n="sec3Title">Semakan Akhir dan Perakuan</h2>
+              <p class="muted-sm" data-i18n="sec3Desc">
+                Sila semak ringkasan maklumat anda sebelum menghantar pengisytiharan ini.
+              </p>
+            </div>
+          </div>
 
-        <!-- Bahagian 3: Perakuan -->
-        <div class="form-section">
+          <div id="hf-summary-grid" class="detail-grid"></div>
+
           <label class="checkbox-ack">
             <input type="checkbox" id="hf-confirm" name="confirmed_accurate" />
             <span data-i18n="ackText">
@@ -406,7 +471,10 @@
 
           <div id="hf-error" class="alert alert-error hidden" role="alert"></div>
 
-          <div class="form-actions">
+          <div class="step-actions">
+            <button type="button" id="btn-step3-prev" class="btn btn-outline" data-i18n="btnPrevStep">
+              Kembali
+            </button>
             <button type="submit" id="btn-save-declaration" class="btn btn-primary btn-lg" data-i18n="submitDeclBtn">
               Hantar Pengisytiharan Kesihatan
             </button>
@@ -415,157 +483,306 @@
       </form>
     </section>
 
-    <!-- ==================== PAPARAN PENTADBIR (ADMIN SAHAJA) ==================== -->
-    <section id="view-admin" class="container section-pad hidden">
-      <div class="page-head">
-        <div>
-          <h1 data-i18n="adminPageTitle">Panel Pentadbir — Rekod Kesihatan Staf</h1>
-          <p class="muted" data-i18n="adminPageDesc">
-            Paparan menyeluruh semua pengguna, status pengisytiharan kesihatan, carian, eksport Excel atau CSV, dan pengurusan akaun staf.
-          </p>
+    <!-- ==================== PAPARAN PENTADBIR BENTO UI (ADMIN SAHAJA) ==================== -->
+    <section id="view-admin" class="admin-shell hidden">
+      <!-- Bar Sisi Navigasi Pentadbir -->
+      <aside class="admin-sidebar" aria-label="Menu Pentadbir">
+        <div class="sidebar-brand">
+          <div class="brand-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 21s-7-4.35-9.5-8.5C.7 9.4 2.2 5.5 5.8 4.4c2.1-.6 4.4.1 6.2 1.9 1.8-1.8 4.1-2.5 6.2-1.9 3.6 1.1 5.1 5 3.3 8.1C19 16.65 12 21 12 21z"/>
+              <path d="M9.5 11.5h5M12 9v5"/>
+            </svg>
+          </div>
+          <div>
+            <div class="brand-title" data-i18n="appShortTitle">MySIHAT-JUPEM</div>
+            <div class="brand-subtitle" data-i18n="appSubtitle">JUPEM</div>
+          </div>
         </div>
-        <div class="admin-head-actions">
-          <button type="button" id="btn-refresh-admin" class="btn btn-sm btn-outline" data-i18n="refreshBtn">
-            Muat Semula Data
+
+        <nav class="sidebar-nav">
+          <button type="button" class="sidebar-link active" data-admin-tab="declarations">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="3" y="3" width="7" height="9" rx="1"/>
+              <rect x="14" y="3" width="7" height="5" rx="1"/>
+              <rect x="14" y="12" width="7" height="9" rx="1"/>
+              <rect x="3" y="16" width="7" height="5" rx="1"/>
+            </svg>
+            <span data-i18n="navOverview">Ringkasan &amp; Rekod</span>
           </button>
-          <button type="button" id="btn-open-create-user" class="btn btn-sm btn-primary" data-i18n="addStaffBtn">
-            + Tambah Akaun Staf
+          <button type="button" class="sidebar-link" data-admin-tab="users">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+            <span data-i18n="navAccounts">Akaun Kakitangan</span>
+          </button>
+          <button type="button" class="sidebar-link" data-nav="staff-form">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+            <span data-i18n="navMyDeclAdmin">Pengisytiharan Saya</span>
+          </button>
+        </nav>
+
+        <div class="sidebar-footer">
+          <div class="sidebar-lang-row">
+            <div class="lang-switch" role="group" aria-label="Pilihan Bahasa">
+              <button type="button" class="lang-btn active" data-lang="ms">BM</button>
+              <button type="button" class="lang-btn" data-lang="en">EN</button>
+            </div>
+            <span class="badge badge-teal" data-i18n="roleAdmin">Pentadbir</span>
+          </div>
+          <div id="sidebar-user-name" class="sidebar-user-name">-</div>
+          <div class="sidebar-footer-btns">
+            <button type="button" id="btn-sidebar-change-pw" class="btn btn-xs btn-ghost" data-i18n="changeOwnPwBtn">
+              Tukar Kata Laluan
+            </button>
+            <button type="button" id="btn-sidebar-logout" class="btn btn-xs btn-outline" data-i18n="logoutBtn">
+              Log Keluar
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Kandungan Utama Pentadbir -->
+      <div class="admin-main">
+        <div class="admin-header-bar">
+          <div>
+            <h1 data-i18n="adminPageTitle">Panel Pentadbir — Rekod Kesihatan Kakitangan</h1>
+            <p class="muted" data-i18n="adminPageDesc">
+              Pemantauan menyeluruh rekod kesihatan kakitangan mengikut seksyen, tapisan belum mengisi, eksport Excel atau CSV, dan pengurusan akaun.
+            </p>
+          </div>
+          <div class="admin-head-actions">
+            <button type="button" id="btn-refresh-admin" class="btn btn-sm btn-outline" data-i18n="refreshBtn">
+              Muat Semula
+            </button>
+            <button type="button" id="btn-export-excel" class="btn btn-sm btn-outline" data-i18n="exportExcelBtn">
+              Eksport Excel
+            </button>
+            <button type="button" id="btn-open-create-user" class="btn btn-sm btn-primary" data-i18n="addStaffBtn">
+              + Tambah Kakitangan
+            </button>
+          </div>
+        </div>
+
+        <!-- 4 Kad Ringkasan KPI dengan Lingkaran Kemajuan SVG -->
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-card-top">
+              <div>
+                <div class="kpi-label" data-i18n="kpiTotalStaff">Jumlah Kakitangan</div>
+                <div id="kpi-total-staff" class="kpi-value">0</div>
+              </div>
+              <div class="kpi-ring-wrap">
+                <svg class="kpi-ring-svg" viewBox="0 0 44 44" aria-hidden="true">
+                  <circle class="ring-track" cx="22" cy="22" r="18" />
+                  <circle id="kpi-total-ring" class="ring-fill ring-teal" cx="22" cy="22" r="18" stroke-dasharray="113.1" stroke-dashoffset="0" />
+                </svg>
+              </div>
+            </div>
+            <div id="kpi-active-sub" class="kpi-sub">-</div>
+          </div>
+
+          <div class="kpi-card kpi-teal">
+            <div class="kpi-card-top">
+              <div>
+                <div class="kpi-label" data-i18n="kpiDeclared">Sudah Mengisi</div>
+                <div id="kpi-declared" class="kpi-value">0</div>
+              </div>
+              <div class="kpi-ring-wrap">
+                <svg class="kpi-ring-svg" viewBox="0 0 44 44" aria-hidden="true">
+                  <circle class="ring-track" cx="22" cy="22" r="18" />
+                  <circle id="kpi-declared-ring" class="ring-fill ring-teal" cx="22" cy="22" r="18" stroke-dasharray="113.1" stroke-dashoffset="113.1" />
+                </svg>
+                <span id="kpi-declared-pct" class="kpi-ring-text">0%</span>
+              </div>
+            </div>
+            <div id="kpi-declared-sub" class="kpi-sub">0% selesai diisi</div>
+          </div>
+
+          <div class="kpi-card kpi-emerald">
+            <div class="kpi-card-top">
+              <div>
+                <div class="kpi-label" data-i18n="kpiHealthy">Status Sihat</div>
+                <div id="kpi-healthy" class="kpi-value">0</div>
+              </div>
+              <div class="kpi-ring-wrap">
+                <svg class="kpi-ring-svg" viewBox="0 0 44 44" aria-hidden="true">
+                  <circle class="ring-track" cx="22" cy="22" r="18" />
+                  <circle id="kpi-healthy-ring" class="ring-fill ring-emerald" cx="22" cy="22" r="18" stroke-dasharray="113.1" stroke-dashoffset="113.1" />
+                </svg>
+              </div>
+            </div>
+            <div class="kpi-sub" data-i18n="kpiHealthySub">Tiada masalah kesihatan</div>
+          </div>
+
+          <div class="kpi-card kpi-rose">
+            <div class="kpi-card-top">
+              <div>
+                <div class="kpi-label" data-i18n="kpiAttention">Perlu Perhatian</div>
+                <div id="kpi-attention" class="kpi-value">0</div>
+              </div>
+              <div class="kpi-ring-wrap">
+                <svg class="kpi-ring-svg" viewBox="0 0 44 44" aria-hidden="true">
+                  <circle class="ring-track" cx="22" cy="22" r="18" />
+                  <circle id="kpi-attention-ring" class="ring-fill ring-amber" cx="22" cy="22" r="18" stroke-dasharray="113.1" stroke-dashoffset="113.1" />
+                </svg>
+              </div>
+            </div>
+            <div id="kpi-undeclared-sub" class="kpi-sub">0 kakitangan belum mengisi</div>
+          </div>
+        </div>
+
+        <!-- Baris Analitik Bento (Carta Pematuhan Seksyen + Carta Donat Status) -->
+        <div id="admin-analytics-row" class="analytics-grid">
+          <div class="card analytics-card">
+            <div class="analytics-card-head">
+              <div>
+                <h2 data-i18n="chartSectionTitle">Pematuhan Mengikut Seksyen / Cawangan</h2>
+                <p class="muted-sm" data-i18n="chartSectionHint">Klik mana-mana seksyen untuk menapis senarai di bawah</p>
+              </div>
+            </div>
+            <div id="section-compliance-list" class="section-bars-list"></div>
+          </div>
+
+          <div class="card analytics-card">
+            <div class="analytics-card-head">
+              <h2 data-i18n="chartStatusTitle">Taburan Status</h2>
+            </div>
+            <div class="donut-layout">
+              <div class="donut-svg-wrap">
+                <svg class="donut-svg" viewBox="0 0 120 120" aria-hidden="true">
+                  <circle class="donut-track" cx="60" cy="60" r="44" />
+                  <circle id="donut-seg-healthy" class="donut-seg seg-emerald" cx="60" cy="60" r="44" stroke-dasharray="0 276.46" stroke-dashoffset="0" />
+                  <circle id="donut-seg-attention" class="donut-seg seg-amber" cx="60" cy="60" r="44" stroke-dasharray="0 276.46" stroke-dashoffset="0" />
+                  <circle id="donut-seg-pending" class="donut-seg seg-rose" cx="60" cy="60" r="44" stroke-dasharray="0 276.46" stroke-dashoffset="0" />
+                </svg>
+                <div id="donut-total-center" class="donut-center-val">0</div>
+              </div>
+              <div id="donut-legend" class="donut-legend"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sub-Tab Pentadbir -->
+        <div class="subtabs">
+          <button type="button" class="subtab active" data-admin-tab="declarations" data-i18n="tabDeclarations">
+            Senarai Pengisytiharan Kakitangan
+          </button>
+          <button type="button" class="subtab" data-admin-tab="users" data-i18n="tabUsers">
+            Pengurusan Akaun Kakitangan
           </button>
         </div>
-      </div>
 
-      <!-- Kad Ringkasan KPI -->
-      <div class="kpi-grid">
-        <div class="kpi-card">
-          <div class="kpi-label" data-i18n="kpiTotalStaff">Jumlah Akaun Staf</div>
-          <div id="kpi-total-staff" class="kpi-value">0</div>
-          <div id="kpi-active-sub" class="kpi-sub">-</div>
-        </div>
-        <div class="kpi-card kpi-teal">
-          <div class="kpi-label" data-i18n="kpiDeclared">Sudah Mengisi</div>
-          <div id="kpi-declared" class="kpi-value">0</div>
-          <div id="kpi-declared-sub" class="kpi-sub">0% telah mengisi</div>
-        </div>
-        <div class="kpi-card kpi-emerald">
-          <div class="kpi-label" data-i18n="kpiHealthy">Status Sihat</div>
-          <div id="kpi-healthy" class="kpi-value">0</div>
-          <div class="kpi-sub" data-i18n="kpiHealthySub">Tiada masalah kesihatan</div>
-        </div>
-        <div class="kpi-card kpi-rose">
-          <div class="kpi-label" data-i18n="kpiAttention">Masalah / Pemantauan</div>
-          <div id="kpi-attention" class="kpi-value">0</div>
-          <div id="kpi-undeclared-sub" class="kpi-sub">0 belum mengisi</div>
-        </div>
-      </div>
-
-      <!-- Sub-Tab Pentadbir -->
-      <div class="subtabs">
-        <button type="button" class="subtab active" data-admin-tab="declarations" data-i18n="tabDeclarations">
-          Senarai Pengisytiharan Kesihatan
-        </button>
-        <button type="button" class="subtab" data-admin-tab="users" data-i18n="tabUsers">
-          Pengurusan Akaun Staf
-        </button>
-      </div>
-
-      <!-- Tab A: Jadual Pengisytiharan Kesihatan -->
-      <div id="admin-tab-declarations" class="card table-card">
-        <div class="toolbar">
-          <div class="toolbar-filters">
-            <input
-              type="search"
-              id="admin-search"
-              class="search-input"
-              data-i18n-placeholder="searchDeclPlaceholder"
-              placeholder="Cari nama, ID pengguna, No. KP, penyakit, ubat atau bahagian..."
-            />
-            <select id="admin-filter-status" class="select-input">
-              <option value="ALL">Semua Status</option>
-              <option value="Sihat">Sihat</option>
-              <option value="Dalam Pemantauan / Rawatan">Dalam Pemantauan atau Rawatan</option>
-              <option value="Mempunyai Masalah Kesihatan">Mempunyai Masalah Kesihatan</option>
-              <option value="Belum Mengisi">Belum Mengisi</option>
-            </select>
-            <select id="admin-filter-condition" class="select-input">
-              <option value="ALL">Semua Penyakit</option>
-            </select>
+        <!-- Tab A: Jadual Pengisytiharan Kakitangan -->
+        <div id="admin-tab-declarations" class="card table-card">
+          <!-- Bar Cip Pantas Seksyen + Penapis -->
+          <div class="section-pills-wrap">
+            <div id="section-pill-bar" class="section-pill-bar"></div>
+            <span id="admin-result-badge" class="badge badge-amber">0 kakitangan dipaparkan</span>
           </div>
-          <div class="toolbar-exports">
-            <button type="button" id="btn-export-csv" class="btn btn-sm btn-outline" data-i18n="exportCsvBtn">
-              Muat Turun CSV
-            </button>
-            <button type="button" id="btn-export-excel" class="btn btn-sm btn-primary" data-i18n="exportExcelBtn">
-              Eksport ke Excel (.xls)
-            </button>
-            <button type="button" id="btn-print-report" class="btn btn-sm btn-ghost" data-i18n="printBtn">
-              Cetak
-            </button>
+
+          <div class="toolbar">
+            <div class="toolbar-filters">
+              <input
+                type="search"
+                id="admin-search"
+                class="search-input"
+                data-i18n-placeholder="searchDeclPlaceholder"
+                placeholder="Cari nama, e-mel, No. KP, seksyen, penyakit atau ubat..."
+              />
+              <select id="admin-filter-section" class="select-input" aria-label="Tapis mengikut seksyen">
+                <option value="ALL">Semua Seksyen</option>
+              </select>
+              <select id="admin-filter-status" class="select-input" aria-label="Tapis mengikut status">
+                <option value="ALL">Semua Status</option>
+              </select>
+              <select id="admin-filter-condition" class="select-input" aria-label="Tapis mengikut penyakit">
+                <option value="ALL">Semua Penyakit</option>
+              </select>
+            </div>
+            <div class="toolbar-exports">
+              <button type="button" id="btn-export-csv" class="btn btn-sm btn-outline" data-i18n="exportCsvBtn">
+                CSV
+              </button>
+              <button type="button" id="btn-print-report" class="btn btn-sm btn-ghost" data-i18n="printBtn">
+                Cetak
+              </button>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th data-i18n="thStaff">Kakitangan</th>
+                  <th data-i18n="thSection">Cawangan / Seksyen</th>
+                  <th data-i18n="thIC">No. Kad Pengenalan</th>
+                  <th data-i18n="thAgeGender">Umur</th>
+                  <th data-i18n="thHealthStatus">Status Kesihatan</th>
+                  <th data-i18n="thConditionsMeds">Penyakit &amp; Ubat</th>
+                  <th data-i18n="thUpdatedAt">Kemas Kini</th>
+                  <th class="no-print" data-i18n="thActions">Tindakan</th>
+                </tr>
+              </thead>
+              <tbody id="admin-declarations-tbody"></tbody>
+            </table>
+          </div>
+          <div id="admin-declarations-empty" class="empty-state hidden" data-i18n="emptyDeclarations">
+            Tiada rekod kakitangan yang sepadan dengan carian atau penapis anda.
           </div>
         </div>
 
-        <div class="table-responsive">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th data-i18n="thStaff">Staf</th>
-                <th data-i18n="thIC">No. Kad Pengenalan</th>
-                <th data-i18n="thAgeGender">Umur dan Jantina</th>
-                <th data-i18n="thHealthStatus">Status Kesihatan</th>
-                <th data-i18n="thConditionsMeds">Penyakit dan Ubat-ubatan</th>
-                <th data-i18n="thUpdatedAt">Kemas Kini Terakhir</th>
-                <th class="no-print" data-i18n="thActions">Tindakan</th>
-              </tr>
-            </thead>
-            <tbody id="admin-declarations-tbody"></tbody>
-          </table>
-        </div>
-        <div id="admin-declarations-empty" class="empty-state hidden" data-i18n="emptyDeclarations">
-          Tiada rekod yang sepadan dengan carian atau penapis anda.
-        </div>
-      </div>
-
-      <!-- Tab B: Pengurusan Akaun Staf -->
-      <div id="admin-tab-users" class="card table-card hidden">
-        <div class="toolbar">
-          <div class="toolbar-filters">
-            <input
-              type="search"
-              id="admin-user-search"
-              class="search-input"
-              data-i18n-placeholder="searchUserPlaceholder"
-              placeholder="Cari nama penuh, ID pengguna atau bahagian..."
-            />
+        <!-- Tab B: Pengurusan Akaun Kakitangan -->
+        <div id="admin-tab-users" class="card table-card hidden">
+          <div class="toolbar">
+            <div class="toolbar-filters">
+              <input
+                type="search"
+                id="admin-user-search"
+                class="search-input"
+                data-i18n-placeholder="searchUserPlaceholder"
+                placeholder="Cari nama penuh, ID pengguna, e-mel atau seksyen..."
+              />
+            </div>
+            <div class="toolbar-exports">
+              <button type="button" id="btn-open-create-user-2" class="btn btn-sm btn-primary" data-i18n="addStaffBtnLong">
+                + Cipta Akaun Kakitangan Baharu
+              </button>
+            </div>
           </div>
-          <div class="toolbar-exports">
-            <button type="button" id="btn-open-create-user-2" class="btn btn-sm btn-primary" data-i18n="addStaffBtnLong">
-              + Cipta Akaun Staf Baharu
-            </button>
-          </div>
-        </div>
 
-        <div class="table-responsive">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th data-i18n="thNameUser">Nama dan ID Pengguna</th>
-                <th data-i18n="thDept">Bahagian</th>
-                <th data-i18n="thRole">Peranan</th>
-                <th data-i18n="thAccountStatus">Status Akaun</th>
-                <th data-i18n="thDeclStatus">Status Pengisytiharan</th>
-                <th class="no-print" data-i18n="thActions">Tindakan</th>
-              </tr>
-            </thead>
-            <tbody id="admin-users-tbody"></tbody>
-          </table>
-        </div>
-        <div id="admin-users-empty" class="empty-state hidden" data-i18n="emptyUsers">
-          Tiada akaun pengguna ditemui.
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th data-i18n="thNameUser">Nama &amp; E-mel Kakitangan</th>
+                  <th data-i18n="thDept">Cawangan / Seksyen</th>
+                  <th data-i18n="thRole">Peranan</th>
+                  <th data-i18n="thAccountStatus">Status Akaun</th>
+                  <th data-i18n="thDeclStatus">Status Pengisytiharan</th>
+                  <th class="no-print" data-i18n="thActions">Tindakan</th>
+                </tr>
+              </thead>
+              <tbody id="admin-users-tbody"></tbody>
+            </table>
+          </div>
+          <div id="admin-users-empty" class="empty-state hidden" data-i18n="emptyUsers">
+            Tiada akaun kakitangan ditemui.
+          </div>
         </div>
       </div>
     </section>
   </main>
 
-  <!-- ==================== MODAL BUTIRAN PENGISYTIHARAN STAF ==================== -->
+  <!-- ==================== MODAL BUTIRAN PENGISYTIHARAN KAKITANGAN ==================== -->
   <div id="modal-detail" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modal-detail-title">
     <div class="modal modal-lg">
       <div class="modal-header">
@@ -579,16 +796,16 @@
     </div>
   </div>
 
-  <!-- ==================== MODAL TAMBAH AKAUN STAF (PENTADBIR) ==================== -->
+  <!-- ==================== MODAL TAMBAH AKAUN KAKITANGAN (PENTADBIR) ==================== -->
   <div id="modal-create-user" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modal-create-user-title">
     <div class="modal">
       <div class="modal-header">
-        <h3 id="modal-create-user-title" data-i18n="modalCreateTitle">Tambah Akaun Staf Baharu</h3>
+        <h3 id="modal-create-user-title" data-i18n="modalCreateTitle">Tambah Akaun Kakitangan Baharu</h3>
         <button type="button" class="modal-close" data-close-modal="modal-create-user" aria-label="Tutup">&times;</button>
       </div>
       <form id="form-create-user" class="modal-body stack-md" novalidate>
         <div class="field">
-          <label for="cu-fullname"><span data-i18n="cuFullNameLabel">Nama Penuh Staf</span> <span class="req">*</span></label>
+          <label for="cu-fullname"><span data-i18n="cuFullNameLabel">Nama Penuh Kakitangan</span> <span class="req">*</span></label>
           <input type="text" id="cu-fullname" data-i18n-placeholder="cuFullNamePlaceholder" placeholder="Contoh: Nurul Izzah binti Ali" required />
         </div>
 
@@ -604,20 +821,20 @@
           <label for="cu-email"><span data-i18n="cuEmailLabel">Alamat E-mel Rasmi (@jupem.gov.my)</span> <span class="req">*</span></label>
           <input type="text" id="cu-email" data-i18n-placeholder="cuEmailPlaceholder" placeholder="Contoh: nurul.izzah@jupem.gov.my" required />
           <small class="field-hint" data-i18n="cuEmailHint">
-            Diisi automatik dengan @jupem.gov.my atau boleh diubah kepada alamat e-mel penuh staf.
+            Diisi automatik dengan @jupem.gov.my atau boleh diubah kepada alamat e-mel penuh kakitangan.
           </small>
         </div>
 
         <div class="grid-2">
           <div class="field">
-            <label for="cu-department" data-i18n="cuDeptLabel">Bahagian / Unit</label>
-            <input type="text" id="cu-department" data-i18n-placeholder="cuDeptPlaceholder" placeholder="Contoh: Unit Operasi" />
+            <label for="cu-department" data-i18n="cuDeptLabel">Cawangan / Seksyen</label>
+            <input type="text" id="cu-department" list="dept-suggestions" data-i18n-placeholder="cuDeptPlaceholder" placeholder="Contoh: Seksyen Penawanan Data" />
           </div>
           <div class="field">
             <label for="cu-role" data-i18n="cuRoleLabel">Peranan Akaun</label>
             <select id="cu-role">
-              <option value="staff">Staf (Isi borang sahaja)</option>
-              <option value="admin">Pentadbir (Lihat semua dan urus staf)</option>
+              <option value="staff">Kakitangan (Isi borang sahaja)</option>
+              <option value="admin">Pentadbir (Lihat semua dan urus kakitangan)</option>
             </select>
           </div>
         </div>
@@ -654,7 +871,7 @@
   <div id="modal-reset-pw" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modal-reset-pw-title">
     <div class="modal modal-sm">
       <div class="modal-header">
-        <h3 id="modal-reset-pw-title" data-i18n="modalResetPwTitle">Set Semula Kata Laluan Staf</h3>
+        <h3 id="modal-reset-pw-title" data-i18n="modalResetPwTitle">Set Semula Kata Laluan Kakitangan</h3>
         <button type="button" class="modal-close" data-close-modal="modal-reset-pw" aria-label="Tutup">&times;</button>
       </div>
       <form id="form-reset-pw" class="modal-body stack-md" novalidate>

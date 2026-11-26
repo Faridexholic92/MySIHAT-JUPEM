@@ -1,5 +1,5 @@
 // Supabase Edge Function: admin-users
-// Mengurus penciptaan akaun staf, reset kata laluan, aktif/nyahaktif, dan padam akaun.
+// Mengurus penciptaan akaun kakitangan, tetap semula kata laluan, aktif/nyahaktif, dan padam akaun.
 // Hanya pengguna dengan peranan 'admin' (disahkan melalui JWT + jadual profiles) dibenarkan.
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';

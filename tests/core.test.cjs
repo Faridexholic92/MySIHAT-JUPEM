@@ -192,7 +192,8 @@ test('Aliran penuh Mod Demo: log masuk admin & staf, cipta akaun, kemaskini dekl
 
 test('AppI18n menyokong Bahasa Melayu baku (DBP) dan Bahasa Inggeris untuk label, status, penyakit, dan ralat', () => {
   AppI18n.setLanguage('ms');
-  assert.equal(AppI18n.t('appTitle'), 'Sistem Pengisytiharan Kesihatan Staf');
+  assert.equal(AppI18n.t('appTitle'), 'Sistem Pengisytiharan Kesihatan Kakitangan');
+  assert.equal(AppI18n.t('roleStaff'), 'Kakitangan');
   assert.equal(AppI18n.t('btnResetPw'), 'Set Semula Kata Laluan');
   assert.equal(AppI18n.translateCondition('Gastric / GERD'), 'Gastrik / GERD');
   assert.equal(AppI18n.translateStatus('Sihat'), 'Sihat');
@@ -201,6 +202,7 @@ test('AppI18n menyokong Bahasa Melayu baku (DBP) dan Bahasa Inggeris untuk label
 
   AppI18n.setLanguage('en');
   assert.equal(AppI18n.t('appTitle'), 'Staff Health Declaration System');
+  assert.equal(AppI18n.t('roleStaff'), 'Staff');
   assert.equal(AppI18n.t('btnResetPw'), 'Reset Password');
   assert.equal(AppI18n.translateCondition('Gastric / GERD'), 'Gastritis / GERD');
   assert.equal(AppI18n.translateStatus('Sihat'), 'Healthy');
