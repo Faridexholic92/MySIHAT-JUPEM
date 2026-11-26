@@ -1,0 +1,10 @@
+/supabase /404 302
+/supabase/* /404 302
+/tests /404 302
+/tests/* /404 302
+/README.md /404 302
+/vercel.json /404 302
+/netlify.toml /404 302
+/.git /404 302
+/.git/* /404 302
+/.gitignore /404 302
