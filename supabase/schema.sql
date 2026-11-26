@@ -24,19 +24,24 @@ create table if not exists public.profiles (
   email text,
   full_name text,
   department text,
+  position text,
   role text not null default 'staff' check (role in ('staff', 'admin')),
   is_active boolean not null default true,
+  must_change_password boolean not null default true,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
 
 alter table public.profiles add column if not exists email text;
+alter table public.profiles add column if not exists position text;
+alter table public.profiles add column if not exists must_change_password boolean not null default true;
 
 create index if not exists idx_profiles_username on public.profiles(username);
 create index if not exists idx_profiles_email on public.profiles(email);
 create index if not exists idx_profiles_role on public.profiles(role);
+create index if not exists idx_profiles_position on public.profiles(position);
 
--- 2. Jadual Deklarasi Kesihatan Staf (satu rekod terkini bagi setiap staf)
+-- 2. Jadual Deklarasi Kesihatan Kakitangan (satu rekod terkini bagi setiap kakitangan)
 create table if not exists public.health_declarations (
   id uuid primary key default gen_random_uuid(),
   user_id uuid unique not null references public.profiles(id) on delete cascade,
@@ -46,6 +51,7 @@ create table if not exists public.health_declarations (
   age integer not null check (age >= 0 and age <= 120),
   gender text not null check (gender in ('Lelaki', 'Perempuan')),
   department text,
+  position text,
   phone text,
   health_status text not null check (
     health_status in ('Sihat', 'Mempunyai Masalah Kesihatan', 'Dalam Pemantauan / Rawatan')
@@ -59,6 +65,8 @@ create table if not exists public.health_declarations (
   submitted_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.health_declarations add column if not exists position text;
 
 create index if not exists idx_health_user_id on public.health_declarations(user_id);
 create index if not exists idx_health_status on public.health_declarations(health_status);
@@ -128,7 +136,9 @@ declare
   v_username text;
   v_full_name text;
   v_department text;
+  v_position text;
   v_role text;
+  v_must_change boolean;
 begin
   v_username := lower(coalesce(
     nullif(trim(new.raw_user_meta_data->>'username'), ''),
@@ -136,15 +146,18 @@ begin
   ));
   v_full_name := nullif(trim(new.raw_user_meta_data->>'full_name'), '');
   v_department := nullif(trim(new.raw_user_meta_data->>'department'), '');
+  v_position := nullif(trim(new.raw_user_meta_data->>'position'), '');
   v_role := case
     when new.raw_app_meta_data->>'role' = 'admin' then 'admin'
     else 'staff'
   end;
+  v_must_change := coalesce((new.raw_app_meta_data->>'must_change_password')::boolean, true);
 
-  insert into public.profiles (id, username, email, full_name, department, role, is_active)
-  values (new.id, v_username, lower(new.email), v_full_name, v_department, v_role, true)
+  insert into public.profiles (id, username, email, full_name, department, position, role, is_active, must_change_password)
+  values (new.id, v_username, lower(new.email), v_full_name, v_department, v_position, v_role, true, v_must_change)
   on conflict (id) do update
-    set email = coalesce(excluded.email, public.profiles.email);
+    set email = coalesce(excluded.email, public.profiles.email),
+        position = coalesce(nullif(public.profiles.position, ''), excluded.position);
 
   return new;
 end;
@@ -204,6 +217,69 @@ create policy "health_update_own"
 drop policy if exists "health_delete_admin_only" on public.health_declarations;
 create policy "health_delete_admin_only"
   on public.health_declarations
+  for delete
+  to authenticated
+  using (public.is_admin());
+
+-- 7. RPC Selamat untuk melengkapkan penukaran kata laluan log masuk pertama
+create or replace function public.complete_first_password_change()
+returns void
+language sql
+security definer
+set search_path = public
+as $$
+  update public.profiles
+  set must_change_password = false
+  where id = auth.uid();
+$$;
+
+revoke all on function public.complete_first_password_change() from public;
+grant execute on function public.complete_first_password_change() to authenticated;
+
+-- 8. Jadual Pengumuman (Ticker) & Polisi RLS
+create table if not exists public.announcements (
+  id uuid primary key default gen_random_uuid(),
+  title text,
+  message text not null,
+  level text not null default 'info' check (level in ('info', 'warning', 'urgent')),
+  is_active boolean not null default true,
+  created_by uuid references public.profiles(id) on delete set null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+drop trigger if exists trg_announcements_updated_at on public.announcements;
+create trigger trg_announcements_updated_at
+  before update on public.announcements
+  for each row execute function public.set_updated_at();
+
+alter table public.announcements enable row level security;
+
+drop policy if exists "announcements_select_active_or_admin" on public.announcements;
+create policy "announcements_select_active_or_admin"
+  on public.announcements
+  for select
+  to anon, authenticated
+  using (is_active = true or public.is_admin());
+
+drop policy if exists "announcements_insert_admin" on public.announcements;
+create policy "announcements_insert_admin"
+  on public.announcements
+  for insert
+  to authenticated
+  with check (public.is_admin());
+
+drop policy if exists "announcements_update_admin" on public.announcements;
+create policy "announcements_update_admin"
+  on public.announcements
+  for update
+  to authenticated
+  using (public.is_admin())
+  with check (public.is_admin());
+
+drop policy if exists "announcements_delete_admin" on public.announcements;
+create policy "announcements_delete_admin"
+  on public.announcements
   for delete
   to authenticated
   using (public.is_admin());

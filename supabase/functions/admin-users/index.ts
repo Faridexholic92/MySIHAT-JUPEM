@@ -92,6 +92,7 @@ Deno.serve(async (req) => {
       const password = String(body.password || '');
       const fullName = String(body.full_name || '').trim();
       const department = String(body.department || '').trim() || null;
+      const position = String(body.position || '').trim() || null;
       const role = body.role === 'admin' ? 'admin' : 'staff';
       const emailDomain = String(body.email_domain || 'jupem.gov.my').trim().toLowerCase();
       const rawEmail = String(body.email || '').trim().toLowerCase();
@@ -101,8 +102,8 @@ Deno.serve(async (req) => {
           error: 'ID Pengguna mestilah 3-32 aksara (huruf kecil, nombor, titik, _ atau - sahaja).'
         }, 400);
       }
-      if (password.length < 6) {
-        return jsonResponse(req, { error: 'Kata laluan mestilah sekurang-kurangnya 6 aksara.' }, 400);
+      if (password.length < 8) {
+        return jsonResponse(req, { error: 'Kata laluan mestilah sekurang-kurangnya 8 aksara.' }, 400);
       }
       if (!fullName) {
         return jsonResponse(req, { error: 'Nama Penuh diperlukan.' }, 400);
@@ -127,8 +128,8 @@ Deno.serve(async (req) => {
         email,
         password,
         email_confirm: true,
-        app_metadata: { role },
-        user_metadata: { username, full_name: fullName, department }
+        app_metadata: { role, must_change_password: true },
+        user_metadata: { username, full_name: fullName, department, position }
       });
 
       if (createErr || !created?.user) {
@@ -145,8 +146,10 @@ Deno.serve(async (req) => {
           email,
           full_name: fullName,
           department,
+          position,
           role,
-          is_active: true
+          is_active: true,
+          must_change_password: true
         })
         .select()
         .single();
@@ -161,8 +164,8 @@ Deno.serve(async (req) => {
     if (action === 'reset_password') {
       const userId = String(body.user_id || '').trim();
       const newPassword = String(body.new_password || '');
-      if (!userId || newPassword.length < 6) {
-        return jsonResponse(req, { error: 'ID pengguna dan kata laluan (>= 6 aksara) diperlukan.' }, 400);
+      if (!userId || newPassword.length < 8) {
+        return jsonResponse(req, { error: 'ID pengguna dan kata laluan (>= 8 aksara) diperlukan.' }, 400);
       }
 
       const { error: updErr } = await supabaseAdmin.auth.admin.updateUserById(userId, {
@@ -170,6 +173,14 @@ Deno.serve(async (req) => {
       });
       if (updErr) {
         return jsonResponse(req, { error: updErr.message }, 400);
+      }
+
+      const { error: flagErr } = await supabaseAdmin
+        .from('profiles')
+        .update({ must_change_password: true })
+        .eq('id', userId);
+      if (flagErr) {
+        return jsonResponse(req, { error: flagErr.message }, 400);
       }
       return jsonResponse(req, { success: true }, 200);
     }

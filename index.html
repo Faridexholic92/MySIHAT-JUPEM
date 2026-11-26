@@ -10,9 +10,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="MySIHAT" />
   <link rel="canonical" href="https://mysihatjupem.dpdns.org/" />
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=20261126c" />
-  <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png?v=20261126c" />
-  <link rel="manifest" href="/site.webmanifest?v=20261126c" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=20261127a" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png?v=20261127a" />
+  <link rel="manifest" href="/site.webmanifest?v=20261127a" />
 
   <!-- Open Graph & Pratonton Pautan (WhatsApp / Telegram) -->
   <meta property="og:type" content="website" />
@@ -25,19 +25,19 @@
   <meta name="twitter:title" content="MySIHAT-JUPEM — Sistem Pengisytiharan Kesihatan Kakitangan" />
   <meta name="twitter:description" content="Portal rasmi pengisytiharan dan pemantauan rekod kesihatan dalaman kakitangan JUPEM." />
 
-  <link rel="stylesheet" href="css/styles.css?v=20261126c" />
+  <link rel="stylesheet" href="css/styles.css?v=20261127a" />
   <script
     src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.2/dist/umd/supabase.min.js"
     integrity="sha384-7i/4BYWz4Mn+lJfg2HWfEPfZQ7tmFKF3CTSKlXBpxWjNlLjcg+T6smpHG4gLmU1u"
     crossorigin="anonymous"
     defer
   ></script>
-  <script src="js/config.js?v=20261126c" defer></script>
-  <script src="js/i18n.js?v=20261126c" defer></script>
-  <script src="js/ic-parser.js?v=20261126c" defer></script>
-  <script src="js/csv-export.js?v=20261126c" defer></script>
-  <script src="js/store.js?v=20261126c" defer></script>
-  <script src="js/app.js?v=20261126c" defer></script>
+  <script src="js/config.js?v=20261127a" defer></script>
+  <script src="js/i18n.js?v=20261127a" defer></script>
+  <script src="js/ic-parser.js?v=20261127a" defer></script>
+  <script src="js/csv-export.js?v=20261127a" defer></script>
+  <script src="js/store.js?v=20261127a" defer></script>
+  <script src="js/app.js?v=20261127a" defer></script>
 </head>
 <body>
   <!-- Banner Mod Simulasi Tempatan (Hanya muncul apabila Supabase belum dikonfigurasi dalam js/config.js) -->
@@ -51,6 +51,22 @@
       </span>
       <button type="button" id="btn-reset-demo" class="btn btn-xs btn-outline-light" data-i18n="resetDemoBtn">
         Set Semula Data Simulasi
+      </button>
+    </div>
+  </div>
+
+  <!-- Jalur Pengumuman Ticker (Sebelum & Selepas Log Masuk) -->
+  <div id="announcement-ticker" class="ticker-bar level-info hidden" role="region" aria-label="Pengumuman Rasmi">
+    <div class="ticker-inner">
+      <span id="ticker-badge" class="ticker-badge">
+        <span class="ticker-dot" aria-hidden="true"></span>
+        <span id="ticker-badge-label" data-i18n="tickerBadgeInfo">PENGUMUMAN</span>
+      </span>
+      <div class="ticker-viewport" tabindex="0">
+        <div id="ticker-track" class="ticker-track ticker-normal"></div>
+      </div>
+      <button type="button" id="btn-read-announcements" class="ticker-read-btn" data-i18n="tickerReadBtn">
+        Baca
       </button>
     </div>
   </div>
@@ -345,15 +361,39 @@
               </datalist>
             </div>
             <div class="field">
-              <label for="hf-phone" data-i18n="phoneLabel">Nombor Telefon Bimbit</label>
+              <label for="hf-position" data-i18n="positionLabel">Jawatan</label>
               <input
-                type="tel"
-                id="hf-phone"
-                name="phone"
-                data-i18n-placeholder="phonePlaceholder"
-                placeholder="Contoh: 012-3456789"
+                type="text"
+                id="hf-position"
+                name="position"
+                list="position-suggestions"
+                data-i18n-placeholder="positionPlaceholder"
+                placeholder="Contoh: Penolong Juruukur"
               />
+              <datalist id="position-suggestions">
+                <option value="Penolong Juruukur"></option>
+                <option value="Pengarah Ukur Seksyen"></option>
+                <option value="Penolong Pengarah Ukur"></option>
+                <option value="Ketua Cawangan"></option>
+                <option value="Ketua Unit"></option>
+                <option value="Penolong Pegawai Tadbir"></option>
+                <option value="Penolong Pegawai Teknologi Maklumat"></option>
+                <option value="Pembantu Tadbir Kewangan"></option>
+                <option value="Pembantu Tadbir (P/O)"></option>
+                <option value="Pegawai Khidmat Pelanggan"></option>
+              </datalist>
             </div>
+          </div>
+
+          <div class="field">
+            <label for="hf-phone" data-i18n="phoneLabel">Nombor Telefon Bimbit</label>
+            <input
+              type="tel"
+              id="hf-phone"
+              name="phone"
+              data-i18n-placeholder="phonePlaceholder"
+              placeholder="Contoh: 012-3456789"
+            />
           </div>
 
           <div id="hf-step1-error" class="alert alert-error hidden" role="alert"></div>
@@ -545,6 +585,13 @@
             </svg>
             <span data-i18n="navAccounts">Akaun Kakitangan</span>
           </button>
+          <button type="button" class="sidebar-link" data-admin-tab="announcements">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="m3 11 18-5v12L3 14v-3z"/>
+              <path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>
+            </svg>
+            <span data-i18n="navAnnouncements">Pengumuman</span>
+          </button>
           <button type="button" class="sidebar-link" data-nav="staff-form">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -715,6 +762,9 @@
           <button type="button" class="subtab" data-admin-tab="users" data-i18n="tabUsers">
             Pengurusan Akaun Kakitangan
           </button>
+          <button type="button" class="subtab" data-admin-tab="announcements" data-i18n="tabAnnouncements">
+            Pengurusan Pengumuman
+          </button>
         </div>
 
         <!-- Tab A: Jadual Pengisytiharan Kakitangan -->
@@ -732,10 +782,13 @@
                 id="admin-search"
                 class="search-input"
                 data-i18n-placeholder="searchDeclPlaceholder"
-                placeholder="Cari nama, e-mel, No. KP, seksyen, penyakit atau ubat..."
+                placeholder="Cari nama, e-mel, No. KP, seksyen, jawatan, penyakit atau ubat..."
               />
               <select id="admin-filter-section" class="select-input" aria-label="Tapis mengikut seksyen">
                 <option value="ALL">Semua Seksyen</option>
+              </select>
+              <select id="admin-filter-position" class="select-input" aria-label="Tapis mengikut jawatan">
+                <option value="ALL">Semua Jawatan</option>
               </select>
               <select id="admin-filter-status" class="select-input" aria-label="Tapis mengikut status">
                 <option value="ALL">Semua Status</option>
@@ -814,6 +867,66 @@
             Tiada akaun kakitangan ditemui.
           </div>
         </div>
+
+        <!-- Tab C: Pengurusan Pengumuman (Ticker) -->
+        <div id="admin-tab-announcements" class="stack-md hidden">
+          <div class="card ann-editor-card">
+            <h2 class="ann-card-heading" data-i18n="annFormTitle">Siar Pengumuman Baharu</h2>
+            <p class="muted-sm" data-i18n="annFormDesc">
+              Pengumuman aktif dipaparkan pada jalur berita (ticker) sebelum dan selepas log masuk.
+            </p>
+            <form id="form-create-announcement" class="stack-md" novalidate>
+              <div class="grid-2">
+                <div class="field">
+                  <label for="ann-title" data-i18n="annTitleLabel">Tajuk Ringkas (Pilihan)</label>
+                  <input type="text" id="ann-title" data-i18n-placeholder="annTitlePlaceholder" placeholder="Contoh: Tarikh Akhir Pengisian" />
+                </div>
+                <div class="field">
+                  <label for="ann-level" data-i18n="annLevelLabel">Tahap Keutamaan</label>
+                  <select id="ann-level">
+                    <option value="info" data-i18n="annLevelInfo">Makluman</option>
+                    <option value="warning" data-i18n="annLevelWarning">Peringatan</option>
+                    <option value="urgent" data-i18n="annLevelUrgent">Segera / Penting</option>
+                  </select>
+                </div>
+              </div>
+              <div class="field">
+                <label for="ann-message"><span data-i18n="annMsgLabel">Teks Pengumuman</span> <span class="req">*</span></label>
+                <textarea id="ann-message" rows="2" data-i18n-placeholder="annMsgPlaceholder" placeholder="Tulis pengumuman yang akan dibaca oleh semua kakitangan..." required></textarea>
+              </div>
+              <label class="checkbox-ack">
+                <input type="checkbox" id="ann-active-check" checked />
+                <span data-i18n="annActivateNow">Aktifkan serta-merta pada jalur ticker</span>
+              </label>
+              <div id="ann-error" class="alert alert-error hidden" role="alert"></div>
+              <div>
+                <button type="submit" id="btn-publish-announcement" class="btn btn-primary btn-sm" data-i18n="annPublishBtn">
+                  Siar Pengumuman
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <div class="card table-card">
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th data-i18n="thAnnMessage">Tajuk &amp; Teks Pengumuman</th>
+                    <th data-i18n="thAnnLevel">Tahap</th>
+                    <th data-i18n="thAnnStatus">Status</th>
+                    <th data-i18n="thUpdatedAt">Kemas Kini</th>
+                    <th class="no-print" data-i18n="thActions">Tindakan</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-announcements-tbody"></tbody>
+              </table>
+            </div>
+            <div id="admin-announcements-empty" class="empty-state hidden" data-i18n="emptyAnnouncements">
+              Belum ada pengumuman didaftarkan.
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   </main>
@@ -867,12 +980,17 @@
             <input type="text" id="cu-department" list="dept-suggestions" data-i18n-placeholder="cuDeptPlaceholder" placeholder="Contoh: Seksyen Penawanan Data" />
           </div>
           <div class="field">
-            <label for="cu-role" data-i18n="cuRoleLabel">Peranan Akaun</label>
-            <select id="cu-role">
-              <option value="staff">Kakitangan (Isi borang sahaja)</option>
-              <option value="admin">Pentadbir (Lihat semua dan urus kakitangan)</option>
-            </select>
+            <label for="cu-position" data-i18n="cuPositionLabel">Jawatan</label>
+            <input type="text" id="cu-position" list="position-suggestions" data-i18n-placeholder="cuPositionPlaceholder" placeholder="Contoh: Penolong Juruukur" />
           </div>
+        </div>
+
+        <div class="field">
+          <label for="cu-role" data-i18n="cuRoleLabel">Peranan Akaun</label>
+          <select id="cu-role">
+            <option value="staff">Kakitangan (Isi borang sahaja)</option>
+            <option value="admin">Pentadbir (Lihat semua dan urus kakitangan)</option>
+          </select>
         </div>
 
         <div class="field">
@@ -881,7 +999,7 @@
             <button type="button" id="btn-gen-password" class="link-btn" data-i18n="cuGenPasswordBtn">Jana Kata Laluan Rawak</button>
           </div>
           <div class="password-input-wrap">
-            <input type="text" id="cu-password" data-i18n-placeholder="cuPasswordPlaceholder" placeholder="Minimum 6 aksara" required />
+            <input type="text" id="cu-password" minlength="8" data-i18n-placeholder="cuPasswordPlaceholder" placeholder="Minimum 8 aksara" required />
           </div>
         </div>
 
@@ -917,7 +1035,7 @@
         </p>
         <div class="field">
           <label for="rp-new-password"><span data-i18n="rpNewPwLabel">Kata Laluan Baharu</span> <span class="req">*</span></label>
-          <input type="text" id="rp-new-password" data-i18n-placeholder="cuPasswordPlaceholder" placeholder="Minimum 6 aksara" required />
+          <input type="text" id="rp-new-password" minlength="8" data-i18n-placeholder="cuPasswordPlaceholder" placeholder="Minimum 8 aksara" required />
         </div>
         <div id="rp-error" class="alert alert-error hidden"></div>
         <div class="modal-footer-inline">
@@ -938,11 +1056,11 @@
       <form id="form-change-own-pw" class="modal-body stack-md" novalidate>
         <div class="field">
           <label for="op-new-password"><span data-i18n="opNewPwLabel">Kata Laluan Baharu</span> <span class="req">*</span></label>
-          <input type="password" id="op-new-password" data-i18n-placeholder="cuPasswordPlaceholder" placeholder="Minimum 6 aksara" required />
+          <input type="password" id="op-new-password" minlength="8" data-i18n-placeholder="cuPasswordPlaceholder" placeholder="Minimum 8 aksara" required />
         </div>
         <div class="field">
           <label for="op-confirm-password"><span data-i18n="opConfirmPwLabel">Sahkan Kata Laluan Baharu</span> <span class="req">*</span></label>
-          <input type="password" id="op-confirm-password" data-i18n-placeholder="opConfirmPlaceholder" placeholder="Ulang kata laluan baharu" required />
+          <input type="password" id="op-confirm-password" minlength="8" data-i18n-placeholder="opConfirmPlaceholder" placeholder="Ulang kata laluan baharu" required />
         </div>
         <div id="op-error" class="alert alert-error hidden"></div>
         <div class="modal-footer-inline">
@@ -950,6 +1068,50 @@
           <button type="submit" id="btn-submit-own-pw" class="btn btn-primary" data-i18n="opUpdateBtn">Kemas Kini</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL WAJIB TUKAR KATA LALUAN LOG MASUK PERTAMA ==================== -->
+  <div id="modal-force-change-pw" class="modal-backdrop hidden" data-locked="true" role="dialog" aria-modal="true" aria-labelledby="modal-force-pw-title">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <h3 id="modal-force-pw-title" data-i18n="modalForcePwTitle">Tukar Kata Laluan Wajib (Log Masuk Pertama)</h3>
+      </div>
+      <form id="form-force-change-pw" class="modal-body stack-md" novalidate>
+        <div class="alert alert-warning" data-i18n="forcePwBanner">
+          Demi keselamatan akaun anda, sila tukar kata laluan awal kepada kata laluan baharu sebelum meneruskan ke portal.
+        </div>
+        <div class="field">
+          <label for="fpw-new-password"><span data-i18n="opNewPwLabel">Kata Laluan Baharu</span> <span class="req">*</span></label>
+          <input type="password" id="fpw-new-password" minlength="8" autocomplete="new-password" data-i18n-placeholder="cuPasswordPlaceholder" placeholder="Minimum 8 aksara" required />
+        </div>
+        <div class="field">
+          <label for="fpw-confirm-password"><span data-i18n="opConfirmPwLabel">Sahkan Kata Laluan Baharu</span> <span class="req">*</span></label>
+          <input type="password" id="fpw-confirm-password" minlength="8" autocomplete="new-password" data-i18n-placeholder="opConfirmPlaceholder" placeholder="Ulang kata laluan baharu" required />
+          <small class="field-hint" data-i18n="forcePwRulesHint">
+            Minimum 8 aksara dan tidak dibenarkan menggunakan kata laluan lalai (user@123).
+          </small>
+        </div>
+        <div id="fpw-error" class="alert alert-error hidden" role="alert"></div>
+        <div class="modal-footer-inline">
+          <button type="button" id="btn-force-logout" class="btn btn-outline" data-i18n="logoutBtn">Log Keluar</button>
+          <button type="submit" id="btn-submit-force-pw" class="btn btn-primary" data-i18n="forcePwSaveBtn">Simpan &amp; Teruskan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL BACA PENGUMUMAN PENUH ==================== -->
+  <div id="modal-announcement-read" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modal-ann-read-title">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modal-ann-read-title" data-i18n="modalAnnReadTitle">Pengumuman Rasmi</h3>
+        <button type="button" class="modal-close" data-close-modal="modal-announcement-read" aria-label="Tutup">&times;</button>
+      </div>
+      <div id="modal-ann-read-body" class="modal-body stack-md"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" data-close-modal="modal-announcement-read" data-i18n="modalCloseBtn">Tutup</button>
+      </div>
     </div>
   </div>
 

@@ -6,6 +6,8 @@
 
   var DEMO_STORAGE_KEY = 'deklarasi_kesihatan_demo_v1';
   var DEMO_SESSION_KEY = 'deklarasi_kesihatan_demo_session_v1';
+  var MIN_PASSWORD_LENGTH = 8;
+  var DEFAULT_INITIAL_PASSWORD = 'user@123';
 
   function getConfig() {
     if (typeof module !== 'undefined' && module.exports) {
@@ -127,6 +129,7 @@
       age: parsedIC.age,
       gender: parsedIC.gender,
       department: String(payload.department || '').trim() || null,
+      position: String(payload.position || '').trim() || null,
       phone: String(payload.phone || '').trim() || null,
       health_status: payload.health_status,
       conditions: conditions,
@@ -159,8 +162,10 @@
           password: 'Admin@1234',
           full_name: 'Pentadbir Sistem (Admin)',
           department: 'Pentadbiran & Sumber Manusia',
+          position: 'Penolong Pegawai Tadbir',
           role: 'admin',
           is_active: true,
+          must_change_password: false,
           created_at: now,
           updated_at: now
         },
@@ -170,8 +175,10 @@
           password: 'Staf@1234',
           full_name: 'Siti Aminah binti Rahman',
           department: 'Unit Kewangan',
+          position: 'Pembantu Tadbir Kewangan',
           role: 'staff',
           is_active: true,
+          must_change_password: false,
           created_at: now,
           updated_at: now
         },
@@ -181,8 +188,10 @@
           password: 'Staf@1234',
           full_name: 'Muhammad Hakim bin Rosli',
           department: 'Unit Operasi Teknikal',
+          position: 'Ketua Unit Operasi',
           role: 'staff',
           is_active: true,
+          must_change_password: false,
           created_at: now,
           updated_at: now
         },
@@ -191,9 +200,11 @@
           username: 'farid',
           password: 'Staf@1234',
           full_name: 'Farid bin Tasim',
-          department: 'Unit ICT',
+          department: 'Seksyen Penawanan Data',
+          position: 'Penolong Juruukur',
           role: 'staff',
           is_active: true,
+          must_change_password: false,
           created_at: now,
           updated_at: now
         }
@@ -208,6 +219,7 @@
           age: icAminah.age,
           gender: icAminah.gender,
           department: 'Unit Kewangan',
+          position: 'Pembantu Tadbir Kewangan',
           phone: '013-8824109',
           health_status: 'Sihat',
           conditions: [],
@@ -228,6 +240,7 @@
           age: icHakim.age,
           gender: icHakim.gender,
           department: 'Unit Operasi Teknikal',
+          position: 'Ketua Unit Operasi',
           phone: '012-7745120',
           health_status: 'Dalam Pemantauan / Rawatan',
           conditions: ['Asma / Lelah', 'Alahan (Ubat / Makanan / Persekitaran)'],
@@ -237,6 +250,17 @@
           notes: 'Sentiasa membawa inhaler bersama semasa aktiviti luar.',
           confirmed_accurate: true,
           submitted_at: now,
+          updated_at: now
+        }
+      ],
+      announcements: [
+        {
+          id: 'ann-001',
+          title: 'Makluman Pengisian Rekod Kesihatan',
+          message: 'Semua kakitangan Bahagian Pemetaan Topografi Sabah dimohon menyemak maklumat jawatan dan melengkapkan pengisytiharan kesihatan terkini serta menukar kata laluan pada log masuk pertama.',
+          level: 'info',
+          is_active: true,
+          created_at: now,
           updated_at: now
         }
       ]
@@ -251,7 +275,17 @@
       return seed;
     }
     try {
-      return JSON.parse(raw);
+      var db = JSON.parse(raw);
+      if (!Array.isArray(db.announcements)) {
+        db.announcements = createSeedDemoData().announcements;
+      }
+      if (Array.isArray(db.users)) {
+        db.users.forEach(function (u) {
+          if (u.position === undefined) u.position = '';
+          if (u.must_change_password === undefined) u.must_change_password = false;
+        });
+      }
+      return db;
     } catch (e) {
       var reset = createSeedDemoData();
       root.localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify(reset));
@@ -270,8 +304,10 @@
       email: user.email || resolveAuthEmail(user.username),
       full_name: user.full_name,
       department: user.department || '',
+      position: user.position || '',
       role: user.role,
       is_active: user.is_active,
+      must_change_password: Boolean(user.must_change_password),
       created_at: user.created_at,
       updated_at: user.updated_at
     };
@@ -336,7 +372,7 @@
     var authUser = res.data.session.user;
     var profileRes = await client
       .from('profiles')
-      .select('id, username, email, full_name, department, role, is_active, created_at, updated_at')
+      .select('*')
       .eq('id', authUser.id)
       .single();
 
@@ -399,7 +435,7 @@
     var authUser = authRes.data.user;
     var profileRes = await client
       .from('profiles')
-      .select('id, username, email, full_name, department, role, is_active, created_at, updated_at')
+      .select('*')
       .eq('id', authUser.id)
       .single();
 
@@ -426,8 +462,11 @@
   }
 
   async function changeOwnPassword(newPassword) {
-    if (!newPassword || newPassword.length < 6) {
-      throw makeError('PASSWORD_TOO_SHORT', 'Kata laluan baharu mestilah sekurang-kurangnya 6 aksara.');
+    if (!newPassword || newPassword.length < MIN_PASSWORD_LENGTH) {
+      throw makeError('PASSWORD_TOO_SHORT', 'Kata laluan baharu mestilah sekurang-kurangnya 8 aksara.');
+    }
+    if (String(newPassword) === DEFAULT_INITIAL_PASSWORD) {
+      throw makeError('PASSWORD_CANNOT_BE_DEFAULT', 'Sila pilih kata laluan baharu yang berbeza daripada kata laluan awal.');
     }
     if (!isSupabaseConfigured()) {
       var userId = root.localStorage.getItem(DEMO_SESSION_KEY);
@@ -435,6 +474,7 @@
       var user = db.users.find(function (u) { return u.id === userId; });
       if (!user) throw new Error('Sesi tidak sah.');
       user.password = newPassword;
+      user.must_change_password = false;
       user.updated_at = new Date().toISOString();
       saveDemoDB(db);
       return true;
@@ -443,6 +483,10 @@
     var client = getSupabaseClient();
     var res = await client.auth.updateUser({ password: newPassword });
     if (res.error) throw new Error(res.error.message || 'Gagal mengemas kini kata laluan.');
+    var rpcRes = await client.rpc('complete_first_password_change');
+    if (rpcRes && rpcRes.error && rpcRes.error.code !== 'PGRST202' && !/function .* does not exist/i.test(rpcRes.error.message || '')) {
+      throw new Error(rpcRes.error.message || 'Gagal mengemaskini status kata laluan.');
+    }
     return true;
   }
 
@@ -493,6 +537,16 @@
       .select()
       .single();
 
+    if (res.error && /position/i.test(res.error.message || '')) {
+      var fallbackRow = Object.assign({}, row);
+      delete fallbackRow.position;
+      res = await client
+        .from('health_declarations')
+        .upsert(fallbackRow, { onConflict: 'user_id' })
+        .select()
+        .single();
+    }
+
     if (res.error) throw new Error(res.error.message || 'Gagal menyimpan deklarasi kesihatan.');
     return res.data;
   }
@@ -530,6 +584,7 @@
       has_declared: Boolean(declaration),
       display_name: (declaration && declaration.full_name) || profile.full_name || profile.username,
       department: (declaration && declaration.department) || profile.department || '-',
+      position: (declaration && declaration.position) || profile.position || '-',
       formatted_ic: formattedIC,
       live_age: liveAge,
       birth_date: birthDate,
@@ -556,7 +611,7 @@
     var client = getSupabaseClient();
     var pRes = await client
       .from('profiles')
-      .select('id, username, email, full_name, department, role, is_active, created_at, updated_at')
+      .select('*')
       .order('created_at', { ascending: false });
 
     if (pRes.error) throw new Error(pRes.error.message || 'Gagal memuatkan senarai pengguna.');
@@ -580,8 +635,8 @@
     var rawUsernameInput = String(input.username || '').trim().toLowerCase();
     var username = validateUsername(rawUsernameInput);
     var password = String(input.password || '');
-    if (password.length < 6) {
-      throw makeError('PASSWORD_TOO_SHORT', 'Kata laluan awal mestilah sekurang-kurangnya 6 aksara.');
+    if (password.length < MIN_PASSWORD_LENGTH) {
+      throw makeError('PASSWORD_TOO_SHORT', 'Kata laluan awal mestilah sekurang-kurangnya 8 aksara.');
     }
     var fullName = String(input.full_name || '').trim();
     if (!fullName) {
@@ -598,6 +653,7 @@
     }
     var role = input.role === 'admin' ? 'admin' : 'staff';
     var department = String(input.department || '').trim() || null;
+    var position = String(input.position || '').trim() || null;
 
     if (!isSupabaseConfigured()) {
       var db = loadDemoDB();
@@ -616,8 +672,10 @@
         password: password,
         full_name: fullName,
         department: department || '',
+        position: position || '',
         role: role,
         is_active: true,
+        must_change_password: true,
         created_at: now,
         updated_at: now
       };
@@ -636,6 +694,7 @@
         password: password,
         full_name: fullName,
         department: department,
+        position: position,
         role: role,
         email_domain: cfg.AUTH_EMAIL_DOMAIN || 'jupem.gov.my'
       }
@@ -648,14 +707,15 @@
   }
 
   async function adminResetPassword(userId, newPassword) {
-    if (!newPassword || newPassword.length < 6) {
-      throw makeError('PASSWORD_TOO_SHORT', 'Kata laluan baharu mestilah sekurang-kurangnya 6 aksara.');
+    if (!newPassword || newPassword.length < MIN_PASSWORD_LENGTH) {
+      throw makeError('PASSWORD_TOO_SHORT', 'Kata laluan baharu mestilah sekurang-kurangnya 8 aksara.');
     }
     if (!isSupabaseConfigured()) {
       var db = loadDemoDB();
       var user = db.users.find(function (u) { return u.id === userId; });
       if (!user) throw new Error('Pengguna tidak ditemui.');
       user.password = newPassword;
+      user.must_change_password = true;
       user.updated_at = new Date().toISOString();
       saveDemoDB(db);
       return true;
@@ -759,7 +819,145 @@
     root.localStorage.removeItem(DEMO_SESSION_KEY);
   }
 
+  function isMissingAnnouncementsTable(err) {
+    if (!err) return false;
+    var msg = String(err.message || '');
+    return err.code === 'PGRST205' || err.code === '42P01' || /announcements/i.test(msg) && /not found|does not exist/i.test(msg);
+  }
+
+  async function getPublicAnnouncements() {
+    if (!isSupabaseConfigured()) {
+      var db = loadDemoDB();
+      return (db.announcements || [])
+        .filter(function (a) { return a.is_active; })
+        .slice()
+        .sort(function (a, b) { return String(b.created_at).localeCompare(String(a.created_at)); });
+    }
+
+    var client = getSupabaseClient();
+    var res = await client
+      .from('announcements')
+      .select('id, title, message, level, is_active, created_at, updated_at')
+      .eq('is_active', true)
+      .order('created_at', { ascending: false });
+
+    if (res.error) {
+      if (isMissingAnnouncementsTable(res.error)) return [];
+      throw new Error(res.error.message || 'Gagal memuatkan pengumuman.');
+    }
+    return res.data || [];
+  }
+
+  async function getAllAnnouncements() {
+    if (!isSupabaseConfigured()) {
+      var db = loadDemoDB();
+      return (db.announcements || [])
+        .slice()
+        .sort(function (a, b) { return String(b.created_at).localeCompare(String(a.created_at)); });
+    }
+
+    var client = getSupabaseClient();
+    var res = await client
+      .from('announcements')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (res.error) {
+      if (isMissingAnnouncementsTable(res.error)) return [];
+      throw new Error(res.error.message || 'Gagal memuatkan senarai pengumuman.');
+    }
+    return res.data || [];
+  }
+
+  async function adminCreateAnnouncement(input, createdBy) {
+    var message = String((input && input.message) || '').trim();
+    if (!message) {
+      throw makeError('ANN_EMPTY_MESSAGE', 'Sila masukkan teks pengumuman.');
+    }
+    var title = String((input && input.title) || '').trim() || null;
+    var allowedLevels = ['info', 'warning', 'urgent'];
+    var level = allowedLevels.indexOf(input && input.level) !== -1 ? input.level : 'info';
+    var isActive = input && input.is_active !== undefined ? Boolean(input.is_active) : true;
+
+    if (!isSupabaseConfigured()) {
+      var db = loadDemoDB();
+      if (!Array.isArray(db.announcements)) db.announcements = [];
+      var now = new Date().toISOString();
+      var item = {
+        id: generateUUID(),
+        title: title,
+        message: message,
+        level: level,
+        is_active: isActive,
+        created_by: createdBy || null,
+        created_at: now,
+        updated_at: now
+      };
+      db.announcements.unshift(item);
+      saveDemoDB(db);
+      return item;
+    }
+
+    var client = getSupabaseClient();
+    var res = await client
+      .from('announcements')
+      .insert({
+        title: title,
+        message: message,
+        level: level,
+        is_active: isActive,
+        created_by: createdBy || null
+      })
+      .select()
+      .single();
+
+    if (res.error) throw new Error(res.error.message || 'Gagal menerbitkan pengumuman.');
+    return res.data;
+  }
+
+  async function adminToggleAnnouncement(id, isActive) {
+    if (!isSupabaseConfigured()) {
+      var db = loadDemoDB();
+      var item = (db.announcements || []).find(function (a) { return a.id === id; });
+      if (!item) throw new Error('Pengumuman tidak ditemui.');
+      item.is_active = Boolean(isActive);
+      item.updated_at = new Date().toISOString();
+      saveDemoDB(db);
+      return item;
+    }
+
+    var client = getSupabaseClient();
+    var res = await client
+      .from('announcements')
+      .update({ is_active: Boolean(isActive) })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (res.error) throw new Error(res.error.message || 'Gagal mengemas kini status pengumuman.');
+    return res.data;
+  }
+
+  async function adminDeleteAnnouncement(id) {
+    if (!isSupabaseConfigured()) {
+      var db = loadDemoDB();
+      db.announcements = (db.announcements || []).filter(function (a) { return a.id !== id; });
+      saveDemoDB(db);
+      return true;
+    }
+
+    var client = getSupabaseClient();
+    var res = await client
+      .from('announcements')
+      .delete()
+      .eq('id', id);
+
+    if (res.error) throw new Error(res.error.message || 'Gagal memadamkan pengumuman.');
+    return true;
+  }
+
   var api = {
+    MIN_PASSWORD_LENGTH: MIN_PASSWORD_LENGTH,
     isSupabaseConfigured: isSupabaseConfigured,
     resolveAuthEmail: resolveAuthEmail,
     validateUsername: validateUsername,
@@ -776,6 +974,11 @@
     adminToggleActive: adminToggleActive,
     adminDeleteUser: adminDeleteUser,
     adminDeleteDeclaration: adminDeleteDeclaration,
+    getPublicAnnouncements: getPublicAnnouncements,
+    getAllAnnouncements: getAllAnnouncements,
+    adminCreateAnnouncement: adminCreateAnnouncement,
+    adminToggleAnnouncement: adminToggleAnnouncement,
+    adminDeleteAnnouncement: adminDeleteAnnouncement,
     resetDemoData: resetDemoData
   };
 

@@ -25,10 +25,13 @@
   var state = {
     session: null,
     activeView: 'login', // 'login' | 'staff-form' | 'admin'
-    activeAdminTab: 'declarations', // 'declarations' | 'users'
+    activeAdminTab: 'declarations', // 'declarations' | 'users' | 'announcements'
     currentFormStep: 1, // 1 | 2 | 3
     myDeclaration: null,
     adminRecords: [],
+    announcements: [],
+    publicAnnouncements: [],
+    forcedPasswordLock: false,
     lastCreatedCredentials: '',
     lastValidICDigits: '',
     detailModalUserId: null
@@ -304,6 +307,7 @@
     updatePasswordToggleLabels();
     renderConditionsGrid(true);
     renderSelectOptions();
+    renderAnnouncementTicker(state.publicAnnouncements);
 
     if (state.session) {
       renderTopbar();
@@ -315,10 +319,91 @@
         }
       } else if (state.activeView === 'admin') {
         renderAdminAllSections();
+        renderAdminAnnouncementsTable();
         if (state.detailModalUserId && !$('modal-detail').classList.contains('hidden')) {
           showDeclarationDetailModal(state.detailModalUserId);
         }
       }
+    }
+  }
+
+  function levelBadgeMeta(level) {
+    if (level === 'urgent') {
+      return { badgeClass: 'badge-rose', text: t('annLevelUrgent'), tickerText: t('tickerBadgeUrgent') };
+    }
+    if (level === 'warning') {
+      return { badgeClass: 'badge-amber', text: t('annLevelWarning'), tickerText: t('tickerBadgeWarning') };
+    }
+    return { badgeClass: 'badge-teal', text: t('annLevelInfo'), tickerText: t('tickerBadgeInfo') };
+  }
+
+  function renderAnnouncementTicker(items) {
+    var tickerEl = $('announcement-ticker');
+    var trackEl = $('ticker-track');
+    var badgeLabelEl = $('ticker-badge-label');
+    var readBodyEl = $('modal-ann-read-body');
+    if (!tickerEl || !trackEl) return;
+
+    var activeItems = Array.isArray(items) ? items.filter(function (item) { return item && item.is_active; }) : [];
+    if (activeItems.length === 0) {
+      tickerEl.classList.add('hidden');
+      trackEl.innerHTML = '';
+      if (readBodyEl) readBodyEl.innerHTML = '';
+      return;
+    }
+
+    var topLevel = 'info';
+    if (activeItems.some(function (a) { return a.level === 'urgent'; })) {
+      topLevel = 'urgent';
+    } else if (activeItems.some(function (a) { return a.level === 'warning'; })) {
+      topLevel = 'warning';
+    }
+
+    tickerEl.className = 'ticker-bar level-' + topLevel;
+    badgeLabelEl.textContent = levelBadgeMeta(topLevel).tickerText;
+
+    var joinedLength = 0;
+    var parts = activeItems.map(function (a) {
+      var prefix = a.title ? '<strong>' + escapeHtml(a.title) + ':</strong> ' : '';
+      var text = prefix + escapeHtml(a.message);
+      joinedLength += (a.title ? a.title.length : 0) + (a.message ? a.message.length : 0);
+      return '<span class="ticker-item">' + text + '</span>';
+    });
+
+    trackEl.innerHTML = parts.join('<span class="ticker-sep" aria-hidden="true">&bull;</span>');
+    trackEl.classList.remove('ticker-slow', 'ticker-fast');
+    if (joinedLength > 180) {
+      trackEl.classList.add('ticker-slow');
+    } else if (joinedLength < 70) {
+      trackEl.classList.add('ticker-fast');
+    }
+
+    if (readBodyEl) {
+      readBodyEl.innerHTML = activeItems
+        .map(function (a) {
+          var meta = levelBadgeMeta(a.level);
+          return (
+            '<div class="ann-modal-item">' +
+            '<div class="ann-modal-head">' +
+            '<span class="ann-modal-title">' + escapeHtml(a.title || meta.text) + '</span>' +
+            '<span class="badge ' + meta.badgeClass + '">' + escapeHtml(meta.text) + '</span>' +
+            '</div>' +
+            '<div class="ann-modal-msg">' + escapeHtml(a.message) + '</div>' +
+            '<div class="ann-modal-date">' + escapeHtml(formatDateTime(a.updated_at || a.created_at)) + '</div>' +
+            '</div>'
+          );
+        })
+        .join('');
+    }
+  }
+
+  async function loadPublicAnnouncements() {
+    try {
+      state.publicAnnouncements = await root.AppStore.getPublicAnnouncements();
+      renderAnnouncementTicker(state.publicAnnouncements);
+    } catch (err) {
+      state.publicAnnouncements = [];
+      renderAnnouncementTicker([]);
     }
   }
 
@@ -379,10 +464,16 @@
     var profile = state.session ? state.session.profile : null;
     if (!profile) {
       state.activeView = 'login';
+      state.forcedPasswordLock = false;
+    } else if (profile.must_change_password) {
+      state.activeView = 'login';
+      state.forcedPasswordLock = true;
     } else if (viewName === 'admin' && profile.role !== 'admin') {
       state.activeView = 'staff-form';
+      state.forcedPasswordLock = false;
     } else {
       state.activeView = viewName;
+      state.forcedPasswordLock = false;
     }
 
     document.body.classList.toggle('in-admin-view', state.activeView === 'admin');
@@ -396,6 +487,13 @@
     adminEl.classList.toggle('hidden', state.activeView !== 'admin');
 
     renderTopbar();
+
+    if (profile && profile.must_change_password) {
+      $('form-force-change-pw').reset();
+      setAlert('fpw-error', '');
+      openModal('modal-force-change-pw');
+      return;
+    }
 
     if (state.activeView === 'login') {
       replayAnimation(loginEl.querySelector('.login-card'), 'view-animate');
@@ -466,6 +564,7 @@
       '<div class="detail-item"><div class="detail-label">' + escapeHtml(t('summaryIC')) + '</div><div class="detail-value mono">' + escapeHtml(parsed.valid ? parsed.formatted : '-') + '</div></div>' +
       '<div class="detail-item"><div class="detail-label">' + escapeHtml(t('summaryAgeGender')) + '</div><div class="detail-value">' + escapeHtml(ageGenderText) + '</div></div>' +
       '<div class="detail-item"><div class="detail-label">' + escapeHtml(t('summaryDept')) + '</div><div class="detail-value">' + escapeHtml($('hf-department').value.trim() || '-') + '</div></div>' +
+      '<div class="detail-item"><div class="detail-label">' + escapeHtml(t('summaryPosition')) + '</div><div class="detail-value">' + escapeHtml($('hf-position').value.trim() || '-') + '</div></div>' +
       '<div class="detail-item"><div class="detail-label">' + escapeHtml(t('summaryStatus')) + '</div><div class="detail-value">' + (statusVal ? statusBadgeHTML(statusVal) : '-') + '</div></div>' +
       '<div class="detail-item"><div class="detail-label">' + escapeHtml(t('summaryConditions')) + '</div><div class="detail-value">' + escapeHtml(condSummary) + '</div></div>';
   }
@@ -578,6 +677,7 @@
       $('hf-full-name').value = declaration.full_name || profile.full_name || '';
       $('hf-ic').value = root.ICParser.formatIC(declaration.ic_number || '');
       $('hf-department').value = declaration.department || profile.department || '';
+      $('hf-position').value = declaration.position || profile.position || '';
       $('hf-phone').value = declaration.phone || '';
       $('hf-other-conditions').value = declaration.other_conditions || '';
       $('hf-medications').value = declaration.medications || '';
@@ -596,6 +696,7 @@
     } else {
       $('hf-full-name').value = profile.full_name || '';
       $('hf-department').value = profile.department || '';
+      $('hf-position').value = profile.position || '';
     }
 
     updateStaffStatusBanner();
@@ -679,6 +780,33 @@
           '</button>';
       });
     pillBar.innerHTML = pillsHtml;
+  }
+
+  function renderPositionFilterControl(records) {
+    var posSelect = $('admin-filter-position');
+    if (!posSelect) return;
+    var currentVal = posSelect.value || 'ALL';
+    var counts = {};
+    records.forEach(function (r) {
+      var pos = (r.position && r.position !== '-' ? r.position : '').trim();
+      if (!pos) return;
+      counts[pos] = (counts[pos] || 0) + 1;
+    });
+
+    var sortedPositions = Object.keys(counts).sort(function (a, b) {
+      if (counts[b] !== counts[a]) return counts[b] - counts[a];
+      return a.localeCompare(b);
+    });
+
+    posSelect.innerHTML =
+      '<option value="ALL">' + escapeHtml(t('filterAllPositions')) + '</option>' +
+      sortedPositions
+        .map(function (pos) {
+          return '<option value="' + escapeHtml(pos) + '">' + escapeHtml(pos) + ' (' + counts[pos] + ')</option>';
+        })
+        .join('');
+
+    posSelect.value = currentVal === 'ALL' || counts[currentVal] ? currentVal : 'ALL';
   }
 
   function renderAdminAnalytics(sections) {
@@ -781,11 +909,16 @@
   function getFilteredDeclarations() {
     var search = ($('admin-search').value || '').trim().toLowerCase();
     var sectionFilter = $('admin-filter-section').value || 'ALL';
+    var posFilterEl = $('admin-filter-position');
+    var positionFilter = posFilterEl ? (posFilterEl.value || 'ALL') : 'ALL';
     var statusFilter = $('admin-filter-status').value || 'ALL';
     var condFilter = $('admin-filter-condition').value || 'ALL';
 
     return state.adminRecords.filter(function (row) {
       if (sectionFilter !== 'ALL' && row.department !== sectionFilter) {
+        return false;
+      }
+      if (positionFilter !== 'ALL' && row.position !== positionFilter) {
         return false;
       }
       if (statusFilter !== 'ALL' && row.health_status !== statusFilter) {
@@ -804,6 +937,7 @@
           row.profile.username,
           row.profile.email || '',
           row.department,
+          row.position || '',
           row.formatted_ic,
           decl ? decl.ic_number : '',
           row.health_status,
@@ -903,7 +1037,10 @@
           '</div>' +
           '</div>' +
           '</td>' +
-          '<td data-label="' + escapeHtml(t('thSection')) + '">' + escapeHtml(row.department) + '</td>' +
+          '<td data-label="' + escapeHtml(t('thSection')) + '">' +
+          '<div class="cell-main">' + escapeHtml(row.department) + '</div>' +
+          (row.position && row.position !== '-' ? '<div class="cell-sub">' + escapeHtml(row.position) + '</div>' : '') +
+          '</td>' +
           '<td class="mono" data-label="' + escapeHtml(t('thIC')) + '">' + escapeHtml(row.formatted_ic) + '</td>' +
           '<td data-label="' + escapeHtml(t('thAgeGender')) + '">' + ageHTML + '</td>' +
           '<td data-label="' + escapeHtml(t('thHealthStatus')) + '">' + statusBadgeHTML(row.health_status) + '</td>' +
@@ -974,7 +1111,10 @@
           '</div>' +
           '</div>' +
           '</td>' +
-          '<td data-label="' + escapeHtml(t('thDept')) + '">' + escapeHtml(p.department || '-') + '</td>' +
+          '<td data-label="' + escapeHtml(t('thDept')) + '">' +
+          '<div class="cell-main">' + escapeHtml(p.department || '-') + '</div>' +
+          (p.position ? '<div class="cell-sub">' + escapeHtml(p.position) + '</div>' : '') +
+          '</td>' +
           '<td data-label="' + escapeHtml(t('thRole')) + '">' + roleBadge + '</td>' +
           '<td data-label="' + escapeHtml(t('thAccountStatus')) + '">' + activeBadge + '</td>' +
           '<td data-label="' + escapeHtml(t('thDeclStatus')) + '">' + declBadge + '</td>' +
@@ -993,9 +1133,52 @@
       .join('');
   }
 
+  function renderAdminAnnouncementsTable() {
+    var tbody = $('admin-announcements-tbody');
+    var empty = $('admin-announcements-empty');
+    if (!tbody || !empty) return;
+
+    var items = state.announcements || [];
+    if (items.length === 0) {
+      tbody.innerHTML = '';
+      empty.classList.remove('hidden');
+      return;
+    }
+
+    empty.classList.add('hidden');
+    tbody.innerHTML = items
+      .map(function (a) {
+        var meta = levelBadgeMeta(a.level);
+        var activeBadge = a.is_active
+          ? '<span class="badge badge-emerald">' + escapeHtml(t('badgeActive')) + '</span>'
+          : '<span class="badge badge-slate">' + escapeHtml(t('badgeInactive')) + '</span>';
+        var toggleLabel = a.is_active ? t('annHideTickerBtn') : t('annShowTickerBtn');
+
+        return (
+          '<tr>' +
+          '<td class="td-staff">' +
+          '<div class="cell-main">' + escapeHtml(a.title || meta.text) + '</div>' +
+          '<div class="cell-sub">' + escapeHtml(a.message) + '</div>' +
+          '</td>' +
+          '<td data-label="' + escapeHtml(t('thAnnLevel')) + '"><span class="badge ' + meta.badgeClass + '">' + escapeHtml(meta.text) + '</span></td>' +
+          '<td data-label="' + escapeHtml(t('thAnnStatus')) + '">' + activeBadge + '</td>' +
+          '<td data-label="' + escapeHtml(t('thUpdatedAt')) + '">' + escapeHtml(formatDateTime(a.updated_at || a.created_at)) + '</td>' +
+          '<td class="td-actions no-print" data-label="' + escapeHtml(t('thActions')) + '">' +
+          '<div class="action-group">' +
+          '<button type="button" class="btn btn-xs btn-outline" data-action="toggle-ann" data-annid="' + escapeHtml(a.id) + '" data-nextactive="' + (!a.is_active) + '">' + escapeHtml(toggleLabel) + '</button>' +
+          '<button type="button" class="btn btn-xs btn-danger-outline" data-action="delete-ann" data-annid="' + escapeHtml(a.id) + '">' + escapeHtml(t('btnDelete')) + '</button>' +
+          '</div>' +
+          '</td>' +
+          '</tr>'
+        );
+      })
+      .join('');
+  }
+
   function renderAdminAllSections() {
     var sections = computeSectionBreakdown(state.adminRecords);
     renderSectionFilterControls(sections);
+    renderPositionFilterControl(state.adminRecords);
     renderAdminAnalytics(sections);
     renderAdminDeclarationsTable();
     renderAdminUsersTable();
@@ -1003,8 +1186,16 @@
 
   async function loadAdminView() {
     try {
-      state.adminRecords = await root.AppStore.getAdminDashboardData();
+      var results = await Promise.all([
+        root.AppStore.getAdminDashboardData(),
+        root.AppStore.getAllAnnouncements()
+      ]);
+      state.adminRecords = results[0];
+      state.announcements = results[1];
       renderAdminAllSections();
+      renderAdminAnnouncementsTable();
+      state.publicAnnouncements = state.announcements.filter(function (a) { return a.is_active; });
+      renderAnnouncementTicker(state.publicAnnouncements);
     } catch (err) {
       showToast(root.AppI18n.translateStoreError(err), 'error');
     }
@@ -1017,9 +1208,12 @@
     });
     var declTab = $('admin-tab-declarations');
     var usersTab = $('admin-tab-users');
+    var annTab = $('admin-tab-announcements');
     declTab.classList.toggle('hidden', tabName !== 'declarations');
     usersTab.classList.toggle('hidden', tabName !== 'users');
-    replayAnimation(tabName === 'declarations' ? declTab : usersTab, 'view-animate');
+    if (annTab) annTab.classList.toggle('hidden', tabName !== 'announcements');
+    var activeEl = tabName === 'declarations' ? declTab : (tabName === 'users' ? usersTab : annTab);
+    replayAnimation(activeEl, 'view-animate');
   }
 
   function selectAdminSectionFilter(sectionName) {
@@ -1053,6 +1247,7 @@
       '<div class="detail-grid">' +
       '<div class="detail-item"><div class="detail-label">' + escapeHtml(t('detailFullName')) + '</div><div class="detail-value">' + escapeHtml(row.display_name) + '</div></div>' +
       '<div class="detail-item"><div class="detail-label">' + escapeHtml(t('detailUserDept')) + '</div><div class="detail-value">' + escapeHtml(row.profile.email || '@' + row.profile.username) + ' &bull; ' + escapeHtml(row.department) + '</div></div>' +
+      '<div class="detail-item"><div class="detail-label">' + escapeHtml(t('detailPosition')) + '</div><div class="detail-value">' + escapeHtml(row.position || '-') + '</div></div>' +
       '<div class="detail-item"><div class="detail-label">' + escapeHtml(t('detailIC')) + '</div><div class="detail-value mono">' + escapeHtml(row.formatted_ic) + '</div></div>' +
       '<div class="detail-item"><div class="detail-label">' + escapeHtml(t('detailAgeGenderDob')) + '</div><div class="detail-value"><strong>' + escapeHtml(t('ageUnit', { age: row.live_age })) + '</strong> &bull; ' + escapeHtml(root.AppI18n.translateGender(row.gender)) + ' &bull; ' + escapeHtml(formatISODate(row.birth_date)) + '</div></div>' +
       '<div class="detail-item"><div class="detail-label">' + escapeHtml(t('detailBirthState')) + '</div><div class="detail-value">' + escapeHtml(root.AppI18n.translateBirthState(row.birth_state)) + '</div></div>' +
@@ -1084,6 +1279,7 @@
         r.profile.username,
         r.profile.email || '-',
         r.department,
+        r.position || '-',
         d ? r.formatted_ic : '-',
         d ? formatISODate(r.birth_date) : '-',
         d && r.live_age !== null ? Number(r.live_age) : '-',
@@ -1158,10 +1354,12 @@
         );
         state.session = session;
         $('login-password').value = '';
-        showToast(
-          t('welcomeToast', { name: session.profile.full_name || session.profile.username }),
-          'success'
-        );
+        if (!session.profile.must_change_password) {
+          showToast(
+            t('welcomeToast', { name: session.profile.full_name || session.profile.username }),
+            'success'
+          );
+        }
         await switchView(session.profile.role === 'admin' ? 'admin' : 'staff-form');
       } catch (err) {
         setAlert('login-error', root.AppI18n.translateStoreError(err));
@@ -1308,6 +1506,7 @@
           full_name: $('hf-full-name').value,
           ic_number: $('hf-ic').value,
           department: $('hf-department').value,
+          position: $('hf-position').value,
           phone: $('hf-phone').value,
           health_status: healthStatus,
           conditions: selectedConditions,
@@ -1351,6 +1550,7 @@
     $('admin-search').addEventListener('input', renderAdminDeclarationsTable);
     $('admin-filter-status').addEventListener('change', renderAdminDeclarationsTable);
     $('admin-filter-condition').addEventListener('change', renderAdminDeclarationsTable);
+    $('admin-filter-position').addEventListener('change', renderAdminDeclarationsTable);
     $('admin-filter-section').addEventListener('change', function (e) {
       selectAdminSectionFilter(e.target.value);
     });
@@ -1491,6 +1691,7 @@
           username: rawUsername,
           email: email,
           department: $('cu-department').value,
+          position: $('cu-position').value,
           role: $('cu-role').value,
           password: password
         });
@@ -1509,6 +1710,7 @@
         $('cu-email').value = '';
         $('cu-email').dataset.manual = 'false';
         $('cu-department').value = '';
+        $('cu-position').value = '';
         $('cu-password').value = generateRandomPassword(10);
 
         await loadAdminView();
@@ -1596,6 +1798,97 @@
       }
     });
 
+    $('btn-read-announcements').addEventListener('click', function () {
+      if ((state.publicAnnouncements || []).length > 0) {
+        openModal('modal-announcement-read');
+      }
+    });
+
+    $('form-force-change-pw').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      setAlert('fpw-error', '');
+      var pw1 = $('fpw-new-password').value;
+      var pw2 = $('fpw-confirm-password').value;
+      if (pw1 !== pw2) {
+        setAlert('fpw-error', t('opMismatchErr'));
+        return;
+      }
+      var btn = $('btn-submit-force-pw');
+      btn.disabled = true;
+      btn.classList.add('is-loading');
+      try {
+        await root.AppStore.changeOwnPassword(pw1);
+        if (state.session && state.session.profile) {
+          state.session.profile.must_change_password = false;
+        }
+        state.forcedPasswordLock = false;
+        closeModal('modal-force-change-pw');
+        showToast(t('forcePwUpdatedToast'), 'success');
+        await switchView(state.session.profile.role === 'admin' ? 'admin' : 'staff-form');
+      } catch (err) {
+        setAlert('fpw-error', root.AppI18n.translateStoreError(err));
+      } finally {
+        btn.disabled = false;
+        btn.classList.remove('is-loading');
+      }
+    });
+
+    $('btn-force-logout').addEventListener('click', async function () {
+      closeModal('modal-force-change-pw');
+      await handleLogout();
+    });
+
+    $('form-create-announcement').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      setAlert('ann-error', '');
+      var btn = $('btn-publish-announcement');
+      btn.disabled = true;
+      btn.classList.add('is-loading');
+      try {
+        await root.AppStore.adminCreateAnnouncement({
+          title: $('ann-title').value,
+          level: $('ann-level').value,
+          message: $('ann-message').value,
+          is_active: $('ann-active-check').checked
+        }, state.session.profile.id);
+        $('ann-title').value = '';
+        $('ann-message').value = '';
+        await loadAdminView();
+        showToast(t('annPublishedToast'), 'success');
+      } catch (err) {
+        setAlert('ann-error', root.AppI18n.translateStoreError(err));
+      } finally {
+        btn.disabled = false;
+        btn.classList.remove('is-loading');
+      }
+    });
+
+    $('admin-announcements-tbody').addEventListener('click', async function (e) {
+      var btn = e.target.closest('[data-action]');
+      if (!btn) return;
+      var action = btn.dataset.action;
+      var annId = btn.dataset.annid;
+      if (action === 'toggle-ann') {
+        var nextActive = btn.dataset.nextactive === 'true';
+        try {
+          await root.AppStore.adminToggleAnnouncement(annId, nextActive);
+          await loadAdminView();
+          showToast(t('annUpdatedToast'), 'success');
+        } catch (err) {
+          showToast(root.AppI18n.translateStoreError(err), 'error');
+        }
+      } else if (action === 'delete-ann') {
+        if (!root.confirm(t('annConfirmDelete'))) return;
+        try {
+          await root.AppStore.adminDeleteAnnouncement(annId);
+          await loadAdminView();
+          showToast(t('annDeletedToast'), 'success');
+        } catch (err) {
+          showToast(root.AppI18n.translateStoreError(err), 'error');
+        }
+      }
+    });
+
     document.querySelectorAll('[data-close-modal]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         closeModal(btn.dataset.closeModal);
@@ -1604,7 +1897,7 @@
 
     document.querySelectorAll('.modal-backdrop').forEach(function (backdrop) {
       backdrop.addEventListener('click', function (e) {
-        if (e.target === backdrop) {
+        if (e.target === backdrop && backdrop.dataset.locked !== 'true') {
           backdrop.classList.add('hidden');
           if (backdrop.id === 'modal-detail') {
             state.detailModalUserId = null;
@@ -1612,10 +1905,22 @@
         }
       });
     });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && !state.forcedPasswordLock) {
+        document.querySelectorAll('.modal-backdrop:not(.hidden)').forEach(function (m) {
+          if (m.dataset.locked !== 'true') {
+            m.classList.add('hidden');
+          }
+        });
+      }
+    });
   }
 
   async function bootstrap() {
     initStaticUI();
+    await loadPublicAnnouncements();
+
     bindEvents();
 
     try {

@@ -216,4 +216,95 @@ test('AppI18n menyokong Bahasa Melayu baku (DBP) dan Bahasa Inggeris untuk label
   AppI18n.setLanguage('ms');
 });
 
+test('Ciri baharu v2: polisi kata laluan >=8, tukar kata laluan wajib log masuk pertama, jawatan kakitangan, dan pengumuman ticker', async () => {
+  const origUrl = AppConfig.SUPABASE_URL;
+  const origKey = AppConfig.SUPABASE_ANON_KEY;
+  AppConfig.SUPABASE_URL = '';
+  AppConfig.SUPABASE_ANON_KEY = '';
+
+  const storeMap = new Map();
+  globalThis.localStorage = {
+    getItem: (k) => (storeMap.has(k) ? storeMap.get(k) : null),
+    setItem: (k, v) => storeMap.set(k, String(v)),
+    removeItem: (k) => storeMap.delete(k)
+  };
+
+  try {
+    AppStore.resetDemoData();
+
+    // 1. Admin cipta akaun kakitangan dengan jawatan dan semak had >= 8 aksara
+    const adminSession = await AppStore.signIn('admin', 'Admin@1234');
+    await assert.rejects(
+      () =>
+        AppStore.adminCreateUser({
+          username: 'short.pw',
+          password: '123456',
+          full_name: 'Pendek',
+          role: 'staff'
+        }),
+      /sekurang-kurangnya 8/
+    );
+
+    const created = await AppStore.adminCreateUser({
+      username: 'jamil.ahmad',
+      email: 'jamil@jupem.gov.my',
+      password: 'user@123',
+      full_name: 'Jamil bin Ahmad',
+      department: 'Seksyen Penawanan Data',
+      position: 'Penolong Juruukur',
+      role: 'staff'
+    });
+    assert.equal(created.position, 'Penolong Juruukur');
+    assert.equal(created.must_change_password, true);
+
+    // Admin urus pengumuman ticker
+    const pubBefore = await AppStore.getPublicAnnouncements();
+    assert.equal(pubBefore.length, 1);
+    const urgentAnn = await AppStore.adminCreateAnnouncement(
+      { title: 'Notis Segera', message: 'Sila kemas kini rekod sebelum Jumaat.', level: 'urgent', is_active: true },
+      adminSession.profile.id
+    );
+    const pubAfter = await AppStore.getPublicAnnouncements();
+    assert.equal(pubAfter.length, 2);
+    await AppStore.adminToggleAnnouncement(urgentAnn.id, false);
+    assert.equal((await AppStore.getPublicAnnouncements()).length, 1);
+    await AppStore.adminDeleteAnnouncement(urgentAnn.id);
+
+    await AppStore.signOut();
+
+    // 2. Kakitangan log masuk kali pertama -> must_change_password = true, tolak user@123 dan kata laluan pendek
+    const firstSession = await AppStore.signIn('jamil.ahmad', 'user@123');
+    assert.equal(firstSession.profile.must_change_password, true);
+    assert.equal(firstSession.profile.position, 'Penolong Juruukur');
+
+    await assert.rejects(() => AppStore.changeOwnPassword('1234567'), /8 aksara/);
+    await assert.rejects(() => AppStore.changeOwnPassword('user@123'), /berbeza/);
+
+    await AppStore.changeOwnPassword('JupemSabah#2026');
+    const refreshed = await AppStore.getCurrentSession();
+    assert.equal(refreshed.profile.must_change_password, false);
+
+    // Kakitangan hantar deklarasi termasuk jawatan
+    const savedDecl = await AppStore.upsertMyDeclaration(refreshed.profile.id, {
+      full_name: 'Jamil bin Ahmad',
+      ic_number: '930101-12-5111',
+      department: 'Seksyen Penawanan Data',
+      position: 'Penolong Juruukur Kanan',
+      health_status: 'Sihat',
+      confirmed_accurate: true
+    });
+    assert.equal(savedDecl.position, 'Penolong Juruukur Kanan');
+
+    await AppStore.signOut();
+    await AppStore.signIn('admin', 'Admin@1234');
+    const rows = await AppStore.getAdminDashboardData();
+    const jamilRow = rows.find((r) => r.profile.username === 'jamil.ahmad');
+    assert.equal(jamilRow.position, 'Penolong Juruukur Kanan');
+  } finally {
+    AppConfig.SUPABASE_URL = origUrl;
+    AppConfig.SUPABASE_ANON_KEY = origKey;
+    delete globalThis.localStorage;
+  }
+});
+
 
