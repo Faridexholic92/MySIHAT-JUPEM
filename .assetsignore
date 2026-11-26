@@ -1,0 +1,10 @@
+# Kecualikan fail backend, ujian, dokumentasi dan skrip tempatan daripada aset statik
+supabase/
+tests/
+README.md
+vercel.json
+netlify.toml
+.gitignore
+.assetsignore
+.git/
+*.local.sql
