@@ -6,6 +6,7 @@ const assert = require('node:assert/strict');
 const ICParser = require('../js/ic-parser.js');
 const CSVExport = require('../js/csv-export.js');
 const AppStore = require('../js/store.js');
+const AppConfig = require('../js/config.js');
 const AppI18n = require('../js/i18n.js');
 
 test('ICParser mengira umur, tarikh lahir, jantina & negeri dengan tepat (1990-an)', () => {
@@ -106,6 +107,14 @@ test('AppStore mengesahkan username, resolusi e-mel log masuk, dan deklarasi kes
 });
 
 test('Aliran penuh Mod Demo: log masuk admin & staf, cipta akaun, kemaskini deklarasi, dan sekatan akaun nyahaktif', async () => {
+  assert.equal(AppStore.isSupabaseConfigured(), true);
+
+  const origUrl = AppConfig.SUPABASE_URL;
+  const origKey = AppConfig.SUPABASE_ANON_KEY;
+  AppConfig.SUPABASE_URL = '';
+  AppConfig.SUPABASE_ANON_KEY = '';
+  assert.equal(AppStore.isSupabaseConfigured(), false);
+
   // Sediakan mock localStorage dalam globalThis sebelum menguji aliran stor
   const storeMap = new Map();
   globalThis.localStorage = {
@@ -114,67 +123,71 @@ test('Aliran penuh Mod Demo: log masuk admin & staf, cipta akaun, kemaskini dekl
     removeItem: (k) => storeMap.delete(k)
   };
 
-  AppStore.resetDemoData();
+  try {
+    AppStore.resetDemoData();
 
-  // 1. Staf belum isi ('farid') log masuk dan isi deklarasi kesihatan
-  const faridSession = await AppStore.signIn('farid', 'Staf@1234');
-  assert.equal(faridSession.profile.role, 'staff');
-  assert.equal(await AppStore.getMyDeclaration(faridSession.profile.id), null);
+    // 1. Staf belum isi ('farid') log masuk dan isi deklarasi kesihatan
+    const faridSession = await AppStore.signIn('farid', 'Staf@1234');
+    assert.equal(faridSession.profile.role, 'staff');
+    assert.equal(await AppStore.getMyDeclaration(faridSession.profile.id), null);
 
-  const savedDecl = await AppStore.upsertMyDeclaration(faridSession.profile.id, {
-    full_name: 'Farid bin Tasim',
-    ic_number: '940815-12-5311',
-    department: 'Unit ICT',
-    phone: '011-1234567',
-    health_status: 'Mempunyai Masalah Kesihatan',
-    conditions: ['Asma / Lelah'],
-    other_conditions: 'Sensitif habuk',
-    medications: 'Inhaler bila perlu',
-    confirmed_accurate: true
-  });
-  assert.equal(savedDecl.ic_number, '940815125311');
-  assert.equal(savedDecl.gender, 'Lelaki');
+    const savedDecl = await AppStore.upsertMyDeclaration(faridSession.profile.id, {
+      full_name: 'Farid bin Tasim',
+      ic_number: '940815-12-5311',
+      department: 'Unit ICT',
+      phone: '011-1234567',
+      health_status: 'Mempunyai Masalah Kesihatan',
+      conditions: ['Asma / Lelah'],
+      other_conditions: 'Sensitif habuk',
+      medications: 'Inhaler bila perlu',
+      confirmed_accurate: true
+    });
+    assert.equal(savedDecl.ic_number, '940815125311');
+    assert.equal(savedDecl.gender, 'Lelaki');
 
-  await AppStore.signOut();
-  assert.equal(await AppStore.getCurrentSession(), null);
+    await AppStore.signOut();
+    assert.equal(await AppStore.getCurrentSession(), null);
 
-  // 2. Admin log masuk, lihat semua rekod, cipta staf baharu, reset password & nyahaktifkan akaun
-  const adminSession = await AppStore.signIn('admin', 'Admin@1234');
-  assert.equal(adminSession.profile.role, 'admin');
+    // 2. Admin log masuk, lihat semua rekod, cipta staf baharu, reset password & nyahaktifkan akaun
+    const adminSession = await AppStore.signIn('admin', 'Admin@1234');
+    assert.equal(adminSession.profile.role, 'admin');
 
-  const allRecords = await AppStore.getAdminDashboardData();
-  assert.equal(allRecords.length, 4);
-  const faridView = allRecords.find((r) => r.profile.username === 'farid');
-  assert.equal(faridView.has_declared, true);
-  assert.equal(faridView.health_status, 'Mempunyai Masalah Kesihatan');
+    const allRecords = await AppStore.getAdminDashboardData();
+    assert.equal(allRecords.length, 4);
+    const faridView = allRecords.find((r) => r.profile.username === 'farid');
+    assert.equal(faridView.has_declared, true);
+    assert.equal(faridView.health_status, 'Mempunyai Masalah Kesihatan');
 
-  const newStaff = await AppStore.adminCreateUser({
-    username: 'nadia.ali',
-    email: 'nadia.rasmi@jupem.gov.my',
-    password: 'Password123',
-    full_name: 'Nadia binti Ali',
-    department: 'Unit Kewangan',
-    role: 'staff'
-  });
-  assert.equal(newStaff.username, 'nadia.ali');
-  assert.equal(newStaff.email, 'nadia.rasmi@jupem.gov.my');
+    const newStaff = await AppStore.adminCreateUser({
+      username: 'nadia.ali',
+      email: 'nadia.rasmi@jupem.gov.my',
+      password: 'Password123',
+      full_name: 'Nadia binti Ali',
+      department: 'Unit Kewangan',
+      role: 'staff'
+    });
+    assert.equal(newStaff.username, 'nadia.ali');
+    assert.equal(newStaff.email, 'nadia.rasmi@jupem.gov.my');
 
-  await AppStore.adminResetPassword(newStaff.id, 'Baharu999');
-  await AppStore.signOut();
+    await AppStore.adminResetPassword(newStaff.id, 'Baharu999');
+    await AppStore.signOut();
 
-  // Staf baharu boleh log masuk menggunakan e-mel penuh @jupem.gov.my
-  const nadiaSession = await AppStore.signIn('nadia.rasmi@jupem.gov.my', 'Baharu999');
-  assert.equal(nadiaSession.profile.role, 'staff');
-  await AppStore.signOut();
+    // Staf baharu boleh log masuk menggunakan e-mel penuh @jupem.gov.my
+    const nadiaSession = await AppStore.signIn('nadia.rasmi@jupem.gov.my', 'Baharu999');
+    assert.equal(nadiaSession.profile.role, 'staff');
+    await AppStore.signOut();
 
-  // Admin nyahaktifkan staf baharu -> staf disekat daripada log masuk
-  await AppStore.signIn('admin', 'Admin@1234');
-  await AppStore.adminToggleActive(newStaff.id, false, adminSession.profile.id);
-  await AppStore.signOut();
+    // Admin nyahaktifkan staf baharu -> staf disekat daripada log masuk
+    await AppStore.signIn('admin', 'Admin@1234');
+    await AppStore.adminToggleActive(newStaff.id, false, adminSession.profile.id);
+    await AppStore.signOut();
 
-  await assert.rejects(() => AppStore.signIn('nadia.ali', 'Baharu999'), /dinyahaktifkan/);
-
-  delete globalThis.localStorage;
+    await assert.rejects(() => AppStore.signIn('nadia.ali', 'Baharu999'), /dinyahaktifkan/);
+  } finally {
+    AppConfig.SUPABASE_URL = origUrl;
+    AppConfig.SUPABASE_ANON_KEY = origKey;
+    delete globalThis.localStorage;
+  }
 });
 
 test('AppI18n menyokong Bahasa Melayu baku (DBP) dan Bahasa Inggeris untuk label, status, penyakit, dan ralat', () => {

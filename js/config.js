@@ -13,10 +13,8 @@
   var APP_CONFIG = {
     APP_NAME: 'Sistem Pengisytiharan Kesihatan Staf',
     ORG_NAME: 'JUPEM',
-    // Contoh: 'https://abcdefg12345.supabase.co'
-    SUPABASE_URL: '',
-    // Contoh: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
-    SUPABASE_ANON_KEY: '',
+    SUPABASE_URL: 'https://xnkydlqrypfgczgehhyr.supabase.co',
+    SUPABASE_ANON_KEY: 'sb_publishable_uaDsWxeuTuBt7o0lFykshA_7ptuSNSI',
     // Domain e-mel lalai apabila staf log masuk menggunakan ID Pengguna tanpa @
     AUTH_EMAIL_DOMAIN: 'jupem.gov.my',
     // Nama Supabase Edge Function untuk pengurusan akaun staf oleh Pentadbir
