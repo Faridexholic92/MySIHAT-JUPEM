@@ -81,7 +81,7 @@
     ms: {
       appTitle: 'Sistem Pengisytiharan Kesihatan Kakitangan',
       appShortTitle: 'MySIHAT-JUPEM',
-      appSubtitle: 'JUPEM',
+      appSubtitle: 'JUPEM SABAH',
       demoBannerPrefix: 'Mod Simulasi Tempatan:',
       demoBannerText: 'Data disimpan dalam pelayar web ini sahaja. Lengkapkan fail',
       demoBannerSuffix: 'untuk pautan ke Supabase sebenar.',
@@ -101,8 +101,13 @@
       loggedOutToast: 'Anda telah berjaya log keluar.',
 
       // Log Masuk
+      loginHeroTitle: 'MySIHAT-JUPEM SABAH',
       loginHeading: 'Sistem Pengisytiharan Kesihatan Kakitangan',
+      loginFormHeading: 'Log Masuk Portal Kakitangan',
       loginSubheading: 'Sila log masuk untuk mengisi atau mengemas kini maklumat kesihatan anda.',
+      loginChip1: 'Pengisian Pantas 3 Langkah',
+      loginChip2: 'Pantauan Mengikut Seksyen',
+      loginChip3: 'Rekod Sulit & Terlindung',
       loginUsernameLabel: 'E-mel Rasmi (@jupem.gov.my) atau ID Pengguna',
       loginUsernamePlaceholder: 'Contoh: nama@jupem.gov.my atau nama',
       loginPasswordLabel: 'Kata Laluan',
@@ -356,7 +361,7 @@
     en: {
       appTitle: 'Staff Health Declaration System',
       appShortTitle: 'MySIHAT-JUPEM',
-      appSubtitle: 'JUPEM',
+      appSubtitle: 'JUPEM SABAH',
       demoBannerPrefix: 'Local Simulation Mode:',
       demoBannerText: 'Data is stored in this browser only. Fill in',
       demoBannerSuffix: 'to connect to live Supabase.',
@@ -376,8 +381,13 @@
       loggedOutToast: 'You have signed out.',
 
       // Login
+      loginHeroTitle: 'MySIHAT-JUPEM SABAH',
       loginHeading: 'Staff Health Declaration System',
+      loginFormHeading: 'Staff Portal Sign In',
       loginSubheading: 'Sign in to submit or update your health declaration.',
+      loginChip1: 'Quick 3-Step Submission',
+      loginChip2: 'Section-Level Tracking',
+      loginChip3: 'Confidential & Protected Records',
       loginUsernameLabel: 'Official Email (@jupem.gov.my) or User ID',
       loginUsernamePlaceholder: 'e.g. name@jupem.gov.my or name',
       loginPasswordLabel: 'Password',

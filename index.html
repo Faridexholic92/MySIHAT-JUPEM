@@ -6,9 +6,13 @@
   <title>MySIHAT-JUPEM — Sistem Pengisytiharan Kesihatan Kakitangan</title>
   <meta name="description" content="Portal rasmi pengisytiharan kesihatan dalaman bagi kakitangan Jabatan Ukur dan Pemetaan Malaysia (JUPEM)." />
   <meta name="robots" content="noindex, nofollow, noarchive" />
-  <meta name="theme-color" content="#0f766e" />
+  <meta name="theme-color" content="#005cb9" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="MySIHAT" />
   <link rel="canonical" href="https://mysihatjupem.dpdns.org/" />
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=20261126c" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png?v=20261126c" />
+  <link rel="manifest" href="/site.webmanifest?v=20261126c" />
 
   <!-- Open Graph & Pratonton Pautan (WhatsApp / Telegram) -->
   <meta property="og:type" content="website" />
@@ -21,19 +25,19 @@
   <meta name="twitter:title" content="MySIHAT-JUPEM — Sistem Pengisytiharan Kesihatan Kakitangan" />
   <meta name="twitter:description" content="Portal rasmi pengisytiharan dan pemantauan rekod kesihatan dalaman kakitangan JUPEM." />
 
-  <link rel="stylesheet" href="css/styles.css?v=20261126b" />
+  <link rel="stylesheet" href="css/styles.css?v=20261126c" />
   <script
     src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.2/dist/umd/supabase.min.js"
     integrity="sha384-7i/4BYWz4Mn+lJfg2HWfEPfZQ7tmFKF3CTSKlXBpxWjNlLjcg+T6smpHG4gLmU1u"
     crossorigin="anonymous"
     defer
   ></script>
-  <script src="js/config.js?v=20261126b" defer></script>
-  <script src="js/i18n.js?v=20261126b" defer></script>
-  <script src="js/ic-parser.js?v=20261126b" defer></script>
-  <script src="js/csv-export.js?v=20261126b" defer></script>
-  <script src="js/store.js?v=20261126b" defer></script>
-  <script src="js/app.js?v=20261126b" defer></script>
+  <script src="js/config.js?v=20261126c" defer></script>
+  <script src="js/i18n.js?v=20261126c" defer></script>
+  <script src="js/ic-parser.js?v=20261126c" defer></script>
+  <script src="js/csv-export.js?v=20261126c" defer></script>
+  <script src="js/store.js?v=20261126c" defer></script>
+  <script src="js/app.js?v=20261126c" defer></script>
 </head>
 <body>
   <!-- Banner Mod Simulasi Tempatan (Hanya muncul apabila Supabase belum dikonfigurasi dalam js/config.js) -->
@@ -55,15 +59,12 @@
   <header id="topbar" class="topbar hidden">
     <div class="container topbar-inner">
       <div class="brand">
-        <div class="brand-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 21s-7-4.35-9.5-8.5C.7 9.4 2.2 5.5 5.8 4.4c2.1-.6 4.4.1 6.2 1.9 1.8-1.8 4.1-2.5 6.2-1.9 3.6 1.1 5.1 5 3.3 8.1C19 16.65 12 21 12 21z"/>
-            <path d="M9.5 11.5h5M12 9v5"/>
-          </svg>
+        <div class="brand-logo-wrap">
+          <img src="assets/mysihat-jupem-sabah-logo.jpg?v=20261126c" alt="Logo MySIHAT JUPEM Sabah" class="brand-logo-img" />
         </div>
         <div>
-          <div id="brand-title" class="brand-title" data-i18n="appShortTitle">MySIHAT-JUPEM</div>
-          <div id="brand-subtitle" class="brand-subtitle" data-i18n="appSubtitle">JUPEM</div>
+          <div id="brand-title" class="brand-wordmark" aria-label="MySIHAT"><span class="word-my">My</span><span class="word-sihat">SIHAT</span></div>
+          <div id="brand-subtitle" class="brand-subtitle" data-i18n="appSubtitle">JUPEM SABAH</div>
         </div>
       </div>
 
@@ -91,32 +92,60 @@
   <main class="main-shell">
     <!-- ==================== PAPARAN LOG MASUK ==================== -->
     <section id="view-login" class="login-wrapper">
-      <div class="login-card card">
+      <div class="login-card card login-card-split">
+        <div class="login-lang-float">
+          <div class="lang-switch" role="group" aria-label="Pilihan Bahasa">
+            <button type="button" class="lang-btn active" data-lang="ms">BM</button>
+            <button type="button" class="lang-btn" data-lang="en">EN</button>
+          </div>
+        </div>
+
         <div class="login-hero-band">
           <div class="login-top-bar">
-            <span class="login-portal-tag" data-i18n="appSubtitle">JUPEM</span>
-            <div class="lang-switch lang-switch-light" role="group" aria-label="Pilihan Bahasa">
-              <button type="button" class="lang-btn active" data-lang="ms">BM</button>
-              <button type="button" class="lang-btn" data-lang="en">EN</button>
-            </div>
+            <span class="login-portal-tag" data-i18n="appSubtitle">JUPEM SABAH</span>
           </div>
 
           <div class="login-header">
-            <div class="login-logo" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 21s-7-4.35-9.5-8.5C.7 9.4 2.2 5.5 5.8 4.4c2.1-.6 4.4.1 6.2 1.9 1.8-1.8 4.1-2.5 6.2-1.9 3.6 1.1 5.1 5 3.3 8.1C19 16.65 12 21 12 21z"/>
-                <path d="M9.5 11.5h5M12 9v5"/>
-              </svg>
+            <div class="login-logo-halo">
+              <img src="assets/mysihat-jupem-sabah-logo.jpg?v=20261126c" alt="Logo Rasmi MySIHAT JUPEM Sabah" class="login-logo-img" />
             </div>
-            <div class="login-brand-eyebrow" data-i18n="appShortTitle">MySIHAT-JUPEM</div>
+            <div class="login-brand-eyebrow" data-i18n="loginHeroTitle">MySIHAT-JUPEM SABAH</div>
             <h1 id="login-app-title" data-i18n="loginHeading">Sistem Pengisytiharan Kesihatan Kakitangan</h1>
+          </div>
+
+          <div class="hero-feature-pills" aria-hidden="true">
+            <div class="hero-pill">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <path d="m9 15 2 2 4-4"/>
+              </svg>
+              <span data-i18n="loginChip1">Pengisian Pantas 3 Langkah</span>
+            </div>
+            <div class="hero-pill">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="20" x2="18" y2="10"/>
+                <line x1="12" y1="20" x2="12" y2="4"/>
+                <line x1="6" y1="20" x2="6" y2="14"/>
+              </svg>
+              <span data-i18n="loginChip2">Pantauan Mengikut Seksyen</span>
+            </div>
+            <div class="hero-pill">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
+              <span data-i18n="loginChip3">Rekod Sulit &amp; Terlindung</span>
+            </div>
           </div>
         </div>
 
         <div class="login-body">
-          <p class="muted login-sub" data-i18n="loginSubheading">
-            Sila log masuk untuk mengisi atau mengemas kini maklumat kesihatan anda.
-          </p>
+          <div class="login-body-head">
+            <h2 class="login-form-heading" data-i18n="loginFormHeading">Log Masuk Portal Kakitangan</h2>
+            <p class="muted login-sub" data-i18n="loginSubheading">
+              Sila log masuk untuk mengisi atau mengemas kini maklumat kesihatan anda.
+            </p>
+          </div>
 
           <form id="login-form" class="stack-md" novalidate>
             <div class="field">
@@ -488,15 +517,12 @@
       <!-- Bar Sisi Navigasi Pentadbir -->
       <aside class="admin-sidebar" aria-label="Menu Pentadbir">
         <div class="sidebar-brand">
-          <div class="brand-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 21s-7-4.35-9.5-8.5C.7 9.4 2.2 5.5 5.8 4.4c2.1-.6 4.4.1 6.2 1.9 1.8-1.8 4.1-2.5 6.2-1.9 3.6 1.1 5.1 5 3.3 8.1C19 16.65 12 21 12 21z"/>
-              <path d="M9.5 11.5h5M12 9v5"/>
-            </svg>
+          <div class="brand-logo-wrap brand-logo-lg">
+            <img src="assets/mysihat-jupem-sabah-logo.jpg?v=20261126c" alt="Logo MySIHAT JUPEM Sabah" class="brand-logo-img" />
           </div>
           <div>
-            <div class="brand-title" data-i18n="appShortTitle">MySIHAT-JUPEM</div>
-            <div class="brand-subtitle" data-i18n="appSubtitle">JUPEM</div>
+            <div class="brand-wordmark brand-wordmark-lg"><span class="word-my">My</span><span class="word-sihat">SIHAT</span></div>
+            <div class="brand-subtitle" data-i18n="appSubtitle">JUPEM SABAH</div>
           </div>
         </div>
 
@@ -572,9 +598,19 @@
           </div>
         </div>
 
+        <!-- Takrifan Gradien SVG (Untuk Bar Pematuhan Seksyen) -->
+        <svg class="svg-defs" width="0" height="0" aria-hidden="true">
+          <defs>
+            <linearGradient id="jupemBarGrad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#005cb9" />
+              <stop offset="100%" stop-color="#0f766e" />
+            </linearGradient>
+          </defs>
+        </svg>
+
         <!-- 4 Kad Ringkasan KPI dengan Lingkaran Kemajuan SVG -->
         <div class="kpi-grid">
-          <div class="kpi-card">
+          <div class="kpi-card kpi-blue">
             <div class="kpi-card-top">
               <div>
                 <div class="kpi-label" data-i18n="kpiTotalStaff">Jumlah Kakitangan</div>
@@ -583,7 +619,7 @@
               <div class="kpi-ring-wrap">
                 <svg class="kpi-ring-svg" viewBox="0 0 44 44" aria-hidden="true">
                   <circle class="ring-track" cx="22" cy="22" r="18" />
-                  <circle id="kpi-total-ring" class="ring-fill ring-teal" cx="22" cy="22" r="18" stroke-dasharray="113.1" stroke-dashoffset="0" />
+                  <circle id="kpi-total-ring" class="ring-fill ring-blue" cx="22" cy="22" r="18" stroke-dasharray="113.1" stroke-dashoffset="0" />
                 </svg>
               </div>
             </div>

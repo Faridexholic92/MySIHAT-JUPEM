@@ -12,7 +12,7 @@
 
   var APP_CONFIG = {
     APP_NAME: 'Sistem Pengisytiharan Kesihatan Kakitangan',
-    ORG_NAME: 'JUPEM',
+    ORG_NAME: 'JUPEM SABAH',
     SUPABASE_URL: 'https://xnkydlqrypfgczgehhyr.supabase.co',
     SUPABASE_ANON_KEY: 'sb_publishable_uaDsWxeuTuBt7o0lFykshA_7ptuSNSI',
     // Domain e-mel lalai apabila staf log masuk menggunakan ID Pengguna tanpa @

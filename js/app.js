@@ -894,7 +894,7 @@
 
         return (
           '<tr>' +
-          '<td>' +
+          '<td class="td-staff">' +
           '<div class="staff-cell-wrap">' +
           '<span class="avatar-circle ' + avClass + '">' + escapeHtml(initials) + '</span>' +
           '<div>' +
@@ -903,13 +903,13 @@
           '</div>' +
           '</div>' +
           '</td>' +
-          '<td>' + escapeHtml(row.department) + '</td>' +
-          '<td class="mono">' + escapeHtml(row.formatted_ic) + '</td>' +
-          '<td>' + ageHTML + '</td>' +
-          '<td>' + statusBadgeHTML(row.health_status) + '</td>' +
-          '<td>' + condHTML + '</td>' +
-          '<td>' + (decl ? escapeHtml(formatDateTime(decl.updated_at || decl.submitted_at)) : '<span class="muted-sm">-</span>') + '</td>' +
-          '<td class="no-print">' + actionsHTML + '</td>' +
+          '<td data-label="' + escapeHtml(t('thSection')) + '">' + escapeHtml(row.department) + '</td>' +
+          '<td class="mono" data-label="' + escapeHtml(t('thIC')) + '">' + escapeHtml(row.formatted_ic) + '</td>' +
+          '<td data-label="' + escapeHtml(t('thAgeGender')) + '">' + ageHTML + '</td>' +
+          '<td data-label="' + escapeHtml(t('thHealthStatus')) + '">' + statusBadgeHTML(row.health_status) + '</td>' +
+          '<td data-label="' + escapeHtml(t('thConditionsMeds')) + '">' + condHTML + '</td>' +
+          '<td data-label="' + escapeHtml(t('thUpdatedAt')) + '">' + (decl ? escapeHtml(formatDateTime(decl.updated_at || decl.submitted_at)) : '<span class="muted-sm">-</span>') + '</td>' +
+          '<td class="td-actions no-print" data-label="' + escapeHtml(t('thActions')) + '">' + actionsHTML + '</td>' +
           '</tr>'
         );
       })
@@ -965,7 +965,7 @@
 
         return (
           '<tr>' +
-          '<td>' +
+          '<td class="td-staff">' +
           '<div class="staff-cell-wrap">' +
           '<span class="avatar-circle ' + avClass + '">' + escapeHtml(initials) + '</span>' +
           '<div>' +
@@ -974,11 +974,11 @@
           '</div>' +
           '</div>' +
           '</td>' +
-          '<td>' + escapeHtml(p.department || '-') + '</td>' +
-          '<td>' + roleBadge + '</td>' +
-          '<td>' + activeBadge + '</td>' +
-          '<td>' + declBadge + '</td>' +
-          '<td class="no-print">' +
+          '<td data-label="' + escapeHtml(t('thDept')) + '">' + escapeHtml(p.department || '-') + '</td>' +
+          '<td data-label="' + escapeHtml(t('thRole')) + '">' + roleBadge + '</td>' +
+          '<td data-label="' + escapeHtml(t('thAccountStatus')) + '">' + activeBadge + '</td>' +
+          '<td data-label="' + escapeHtml(t('thDeclStatus')) + '">' + declBadge + '</td>' +
+          '<td class="td-actions no-print" data-label="' + escapeHtml(t('thActions')) + '">' +
           '<div class="action-group">' +
           '<button type="button" class="btn btn-xs btn-outline" data-action="reset-password" data-userid="' + escapeHtml(p.id) + '" data-label="' + escapeHtml(p.full_name || p.username) + '">' + escapeHtml(t('btnResetPw')) + '</button>' +
           (isSelf
