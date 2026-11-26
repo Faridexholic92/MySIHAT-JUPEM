@@ -6,15 +6,17 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const ALLOWED_ORIGINS = new Set([
   'https://mysihatjupem.dpdns.org',
-  'https://mysihat-jupem.pages.dev',
-  'http://localhost:8123',
-  'http://localhost:8080'
+  'https://mysihat-jupem.pages.dev'
 ]);
+
+function isAllowedOrigin(origin: string) {
+  if (!origin) return false;
+  return ALLOWED_ORIGINS.has(origin) || /^https:\/\/[a-z0-9-]+\.mysihat-jupem\.pages\.dev$/i.test(origin);
+}
 
 function getCorsHeaders(req: Request) {
   const origin = req.headers.get('Origin') || '';
-  const isAllowedPreview = /^https:\/\/[a-z0-9-]+\.mysihat-jupem\.pages\.dev$/i.test(origin);
-  const allowOrigin = ALLOWED_ORIGINS.has(origin) || isAllowedPreview
+  const allowOrigin = isAllowedOrigin(origin)
     ? origin
     : 'https://mysihatjupem.dpdns.org';
 
@@ -34,6 +36,11 @@ function jsonResponse(req: Request, data: unknown, status = 200) {
 }
 
 Deno.serve(async (req) => {
+  const requestOrigin = req.headers.get('Origin') || '';
+  if (requestOrigin && !isAllowedOrigin(requestOrigin)) {
+    return jsonResponse(req, { error: 'Origin permintaan tidak dibenarkan.' }, 403);
+  }
+
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: getCorsHeaders(req) });
   }
