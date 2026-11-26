@@ -1,0 +1,16 @@
+# OS & Editor
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+.vscode/
+
+# Dependencies & Environment
+node_modules/
+.env
+.env.*
+
+# Hosting caches
+.vercel/
+.netlify/
+.supabase/
