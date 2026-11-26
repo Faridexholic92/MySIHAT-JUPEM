@@ -12,14 +12,14 @@
 
   var APP_CONFIG = {
     APP_NAME: 'Sistem Pengisytiharan Kesihatan Staf',
-    ORG_NAME: 'Portal Kesihatan Dalaman',
+    ORG_NAME: 'JUPEM',
     // Contoh: 'https://abcdefg12345.supabase.co'
     SUPABASE_URL: '',
     // Contoh: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
     SUPABASE_ANON_KEY: '',
-    // Domain e-mel dalaman apabila staf login menggunakan username sahaja (tanpa @)
-    AUTH_EMAIL_DOMAIN: 'staff.local',
-    // Nama Supabase Edge Function untuk pengurusan akaun staf oleh Admin
+    // Domain e-mel lalai apabila staf log masuk menggunakan ID Pengguna tanpa @
+    AUTH_EMAIL_DOMAIN: 'jupem.gov.my',
+    // Nama Supabase Edge Function untuk pengurusan akaun staf oleh Pentadbir
     ADMIN_EDGE_FUNCTION: 'admin-users'
   };
 

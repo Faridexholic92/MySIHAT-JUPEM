@@ -61,7 +61,7 @@
 
   function resolveAuthEmail(identifier) {
     var cfg = getConfig();
-    var domain = (cfg.AUTH_EMAIL_DOMAIN || 'staff.local').trim().toLowerCase();
+    var domain = (cfg.AUTH_EMAIL_DOMAIN || 'jupem.gov.my').trim().toLowerCase();
     var clean = String(identifier || '').trim().toLowerCase();
     if (!clean) {
       throw makeError('AUTH_EMPTY_ID', 'Sila masukkan ID Pengguna atau alamat e-mel.');
@@ -74,6 +74,9 @@
 
   function validateUsername(username) {
     var clean = String(username || '').trim().toLowerCase();
+    if (clean.indexOf('@') !== -1) {
+      clean = clean.split('@')[0];
+    }
     if (!/^[a-z0-9._-]{3,32}$/.test(clean)) {
       throw makeError(
         'INVALID_USERNAME',
@@ -264,6 +267,7 @@
     return {
       id: user.id,
       username: user.username,
+      email: user.email || resolveAuthEmail(user.username),
       full_name: user.full_name,
       department: user.department || '',
       role: user.role,
@@ -332,7 +336,7 @@
     var authUser = res.data.session.user;
     var profileRes = await client
       .from('profiles')
-      .select('id, username, full_name, department, role, is_active, created_at, updated_at')
+      .select('id, username, email, full_name, department, role, is_active, created_at, updated_at')
       .eq('id', authUser.id)
       .single();
 
@@ -356,17 +360,18 @@
     }
 
     if (!isSupabaseConfigured()) {
-      var cleanId = String(identifier || '').trim().toLowerCase();
-      if (!cleanId) throw makeError('AUTH_EMPTY_ID', 'Sila masukkan ID Pengguna atau alamat e-mel.');
+      var cleanInput = String(identifier || '').trim().toLowerCase();
+      if (!cleanInput) throw makeError('AUTH_EMPTY_ID', 'Sila masukkan ID Pengguna atau alamat e-mel.');
       var cfg = getConfig();
-      var domainSuffix = '@' + (cfg.AUTH_EMAIL_DOMAIN || 'staff.local').toLowerCase();
-      if (cleanId.endsWith(domainSuffix)) {
-        cleanId = cleanId.slice(0, -domainSuffix.length);
-      }
+      var domainSuffix = '@' + (cfg.AUTH_EMAIL_DOMAIN || 'jupem.gov.my').toLowerCase();
+      var cleanId = cleanInput.endsWith(domainSuffix)
+        ? cleanInput.slice(0, -domainSuffix.length)
+        : cleanInput;
 
       var db = loadDemoDB();
       var user = db.users.find(function (u) {
-        return u.username.toLowerCase() === cleanId;
+        var uEmail = (u.email || resolveAuthEmail(u.username)).toLowerCase();
+        return u.username.toLowerCase() === cleanId || uEmail === cleanInput;
       });
       if (!user || user.password !== cleanPass) {
         throw makeError('AUTH_INVALID', 'ID Pengguna atau kata laluan tidak tepat.');
@@ -376,7 +381,7 @@
       }
       root.localStorage.setItem(DEMO_SESSION_KEY, user.id);
       return {
-        user: { id: user.id, email: resolveAuthEmail(user.username) },
+        user: { id: user.id, email: user.email || resolveAuthEmail(user.username) },
         profile: sanitizeProfile(user)
       };
     }
@@ -394,7 +399,7 @@
     var authUser = authRes.data.user;
     var profileRes = await client
       .from('profiles')
-      .select('id, username, full_name, department, role, is_active, created_at, updated_at')
+      .select('id, username, email, full_name, department, role, is_active, created_at, updated_at')
       .eq('id', authUser.id)
       .single();
 
@@ -551,7 +556,7 @@
     var client = getSupabaseClient();
     var pRes = await client
       .from('profiles')
-      .select('id, username, full_name, department, role, is_active, created_at, updated_at')
+      .select('id, username, email, full_name, department, role, is_active, created_at, updated_at')
       .order('created_at', { ascending: false });
 
     if (pRes.error) throw new Error(pRes.error.message || 'Gagal memuatkan senarai pengguna.');
@@ -572,7 +577,8 @@
   }
 
   async function adminCreateUser(input) {
-    var username = validateUsername(input.username);
+    var rawUsernameInput = String(input.username || '').trim().toLowerCase();
+    var username = validateUsername(rawUsernameInput);
     var password = String(input.password || '');
     if (password.length < 6) {
       throw makeError('PASSWORD_TOO_SHORT', 'Kata laluan awal mestilah sekurang-kurangnya 6 aksara.');
@@ -581,19 +587,32 @@
     if (!fullName) {
       throw makeError('INVALID_FULLNAME', 'Sila masukkan Nama Penuh staf.');
     }
+    var cfg = getConfig();
+    var rawEmail = String(input.email || '').trim().toLowerCase();
+    if (!rawEmail && rawUsernameInput.indexOf('@') !== -1) {
+      rawEmail = rawUsernameInput;
+    }
+    var email = rawEmail || resolveAuthEmail(username);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      throw makeError('INVALID_EMAIL', 'Format alamat e-mel tidak sah.');
+    }
     var role = input.role === 'admin' ? 'admin' : 'staff';
     var department = String(input.department || '').trim() || null;
 
     if (!isSupabaseConfigured()) {
       var db = loadDemoDB();
-      var exists = db.users.some(function (u) { return u.username.toLowerCase() === username; });
+      var exists = db.users.some(function (u) {
+        var uEmail = (u.email || resolveAuthEmail(u.username)).toLowerCase();
+        return u.username.toLowerCase() === username || uEmail === email;
+      });
       if (exists) {
-        throw makeError('DUPLICATE_USERNAME', 'ID Pengguna "' + username + '" sudah digunakan.', { username: username });
+        throw makeError('DUPLICATE_USERNAME', 'ID Pengguna atau e-mel "' + username + '" sudah digunakan.', { username: username });
       }
       var now = new Date().toISOString();
       var newUser = {
         id: generateUUID(),
         username: username,
+        email: email,
         password: password,
         full_name: fullName,
         department: department || '',
@@ -607,18 +626,18 @@
       return sanitizeProfile(newUser);
     }
 
-    var cfg = getConfig();
     var client = getSupabaseClient();
     var fnName = cfg.ADMIN_EDGE_FUNCTION || 'admin-users';
     var res = await client.functions.invoke(fnName, {
       body: {
         action: 'create_user',
         username: username,
+        email: email,
         password: password,
         full_name: fullName,
         department: department,
         role: role,
-        email_domain: cfg.AUTH_EMAIL_DOMAIN || 'staff.local'
+        email_domain: cfg.AUTH_EMAIL_DOMAIN || 'jupem.gov.my'
       }
     });
 

@@ -77,9 +77,11 @@ test('CSVExport mengekalkan UTF-8 BOM, escape koma/petikan, dan melindungi formu
 });
 
 test('AppStore mengesahkan username, resolusi e-mel log masuk, dan deklarasi kesihatan', () => {
-  assert.equal(AppStore.resolveAuthEmail('aminah'), 'aminah@staff.local');
+  assert.equal(AppStore.resolveAuthEmail('aminah'), 'aminah@jupem.gov.my');
+  assert.equal(AppStore.resolveAuthEmail('farid@jupem.gov.my'), 'farid@jupem.gov.my');
   assert.equal(AppStore.resolveAuthEmail('ADMIN@Example.com'), 'admin@example.com');
   assert.equal(AppStore.validateUsername('Ali.Ahmad_01'), 'ali.ahmad_01');
+  assert.equal(AppStore.validateUsername('farid.tasim@jupem.gov.my'), 'farid.tasim');
   assert.throws(() => AppStore.validateUsername('a'), /3-32/);
 
   const valid = AppStore.buildValidatedDeclaration({
@@ -148,18 +150,20 @@ test('Aliran penuh Mod Demo: log masuk admin & staf, cipta akaun, kemaskini dekl
 
   const newStaff = await AppStore.adminCreateUser({
     username: 'nadia.ali',
+    email: 'nadia.rasmi@jupem.gov.my',
     password: 'Password123',
     full_name: 'Nadia binti Ali',
     department: 'Unit Kewangan',
     role: 'staff'
   });
   assert.equal(newStaff.username, 'nadia.ali');
+  assert.equal(newStaff.email, 'nadia.rasmi@jupem.gov.my');
 
   await AppStore.adminResetPassword(newStaff.id, 'Baharu999');
   await AppStore.signOut();
 
-  // Staf baharu boleh log masuk menggunakan kata laluan baharu
-  const nadiaSession = await AppStore.signIn('nadia.ali', 'Baharu999');
+  // Staf baharu boleh log masuk menggunakan e-mel penuh @jupem.gov.my
+  const nadiaSession = await AppStore.signIn('nadia.rasmi@jupem.gov.my', 'Baharu999');
   assert.equal(nadiaSession.profile.role, 'staff');
   await AppStore.signOut();
 

@@ -101,8 +101,8 @@
       // Log Masuk
       loginHeading: 'Sistem Pengisytiharan Kesihatan Staf',
       loginSubheading: 'Sila log masuk untuk mengisi atau mengemas kini maklumat kesihatan anda.',
-      loginUsernameLabel: 'ID Pengguna',
-      loginUsernamePlaceholder: 'Contoh: aminah atau admin',
+      loginUsernameLabel: 'E-mel Rasmi (@jupem.gov.my) atau ID Pengguna',
+      loginUsernamePlaceholder: 'Contoh: nama@jupem.gov.my atau nama',
       loginPasswordLabel: 'Kata Laluan',
       loginPasswordPlaceholder: 'Masukkan kata laluan anda',
       showPw: 'Papar',
@@ -254,6 +254,9 @@
       cuUsernameLabel: 'ID Pengguna',
       cuUsernamePlaceholder: 'Contoh: nurul.izzah',
       cuUsernameHint: 'Huruf kecil, nombor, titik (.), garis bawah (_) atau tanda sempang (-) sahaja.',
+      cuEmailLabel: 'Alamat E-mel Rasmi (@jupem.gov.my)',
+      cuEmailPlaceholder: 'Contoh: nurul.izzah@jupem.gov.my',
+      cuEmailHint: 'Diisi automatik dengan @jupem.gov.my atau boleh diubah kepada alamat e-mel penuh staf.',
       cuDeptLabel: 'Bahagian / Unit',
       cuDeptPlaceholder: 'Contoh: Unit Operasi',
       cuRoleLabel: 'Peranan Akaun',
@@ -341,8 +344,8 @@
       // Login
       loginHeading: 'Staff Health Declaration System',
       loginSubheading: 'Sign in to submit or update your health declaration.',
-      loginUsernameLabel: 'User ID (Username)',
-      loginUsernamePlaceholder: 'e.g. aminah or admin',
+      loginUsernameLabel: 'Official Email (@jupem.gov.my) or User ID',
+      loginUsernamePlaceholder: 'e.g. name@jupem.gov.my or name',
       loginPasswordLabel: 'Password',
       loginPasswordPlaceholder: 'Enter your password',
       showPw: 'Show',
@@ -494,6 +497,9 @@
       cuUsernameLabel: 'User ID (Username)',
       cuUsernamePlaceholder: 'e.g. nurul.izzah',
       cuUsernameHint: 'Lowercase letters, numbers, dots (.), underscores (_) or hyphens (-) only.',
+      cuEmailLabel: 'Official Email Address (@jupem.gov.my)',
+      cuEmailPlaceholder: 'e.g. nurul.izzah@jupem.gov.my',
+      cuEmailHint: 'Auto-filled with @jupem.gov.my or can be customised to the staff member\'s full email.',
       cuDeptLabel: 'Department / Unit',
       cuDeptPlaceholder: 'e.g. Operations Unit',
       cuRoleLabel: 'Account Role',
@@ -610,6 +616,10 @@
     INVALID_USERNAME: {
       ms: 'ID Pengguna mestilah 3-32 aksara (huruf kecil, nombor, titik, garis bawah _ atau sempang - sahaja).',
       en: 'Username must be 3-32 characters (lowercase letters, numbers, dot, underscore or hyphen only).'
+    },
+    INVALID_EMAIL: {
+      ms: 'Format alamat e-mel tidak sah.',
+      en: 'Invalid email address format.'
     },
     PASSWORD_TOO_SHORT: {
       ms: 'Kata laluan mestilah sekurang-kurangnya 6 aksara.',

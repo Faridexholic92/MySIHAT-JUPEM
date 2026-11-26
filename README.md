@@ -54,14 +54,15 @@ Akaun ujian sedia ada:
 ### Langkah 4: Cipta Akaun Pentadbir Pertama
 1. Pergi ke **Authentication** > **Users** > **Add user** > **Create new user**.
 2. Masukkan butiran berikut:
-   - **Email:** `admin@staff.local` (gunakan domain yang sama dengan `AUTH_EMAIL_DOMAIN` dalam [js/config.js](js/config.js), atau alamat e-mel sebenar anda)
+   - **Email:** alamat e-mel rasmi anda seperti `nama@jupem.gov.my` (`AUTH_EMAIL_DOMAIN` dalam [js/config.js](js/config.js) sudah ditetapkan kepada `jupem.gov.my`, jadi pengguna boleh log masuk dengan `nama@jupem.gov.my` atau terus menaip `nama` sahaja)
    - **Password:** kata laluan pilihan anda
    - Tandakan **Auto Confirm User** = **ON**
-3. Buka semula **SQL Editor** dan jalankan arahan ini untuk menetapkan peranan kepada `admin`:
+3. Buka semula **SQL Editor** dan jalankan arahan ini (gantikan e-mel di bawah dengan e-mel Pentadbir yang baru dicipta):
    ```sql
-   update public.profiles
+   update public.profiles p
    set role = 'admin', full_name = 'Pentadbir Utama'
-   where username = 'admin';
+   from auth.users u
+   where p.id = u.id and lower(u.email) = 'nama@jupem.gov.my';
    ```
 
 ### Langkah 5: Pasang Edge Function `admin-users`

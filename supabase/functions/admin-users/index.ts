@@ -70,11 +70,12 @@ Deno.serve(async (req) => {
       const fullName = String(body.full_name || '').trim();
       const department = String(body.department || '').trim() || null;
       const role = body.role === 'admin' ? 'admin' : 'staff';
-      const emailDomain = String(body.email_domain || 'staff.local').trim().toLowerCase();
+      const emailDomain = String(body.email_domain || 'jupem.gov.my').trim().toLowerCase();
+      const rawEmail = String(body.email || '').trim().toLowerCase();
 
       if (!/^[a-z0-9._-]{3,32}$/.test(username)) {
         return jsonResponse({
-          error: 'Username mestilah 3-32 aksara (huruf kecil, nombor, titik, _ atau - sahaja).'
+          error: 'ID Pengguna mestilah 3-32 aksara (huruf kecil, nombor, titik, _ atau - sahaja).'
         }, 400);
       }
       if (password.length < 6) {
@@ -84,6 +85,11 @@ Deno.serve(async (req) => {
         return jsonResponse({ error: 'Nama Penuh diperlukan.' }, 400);
       }
 
+      const email = rawEmail || `${username}@${emailDomain}`;
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return jsonResponse({ error: 'Format alamat e-mel tidak sah.' }, 400);
+      }
+
       const { data: existing } = await supabaseAdmin
         .from('profiles')
         .select('id')
@@ -91,10 +97,9 @@ Deno.serve(async (req) => {
         .maybeSingle();
 
       if (existing) {
-        return jsonResponse({ error: `Username "${username}" sudah digunakan.` }, 409);
+        return jsonResponse({ error: `ID Pengguna "${username}" sudah digunakan.` }, 409);
       }
 
-      const email = `${username}@${emailDomain}`;
       const { data: created, error: createErr } = await supabaseAdmin.auth.admin.createUser({
         email,
         password,
@@ -114,6 +119,7 @@ Deno.serve(async (req) => {
         .upsert({
           id: created.user.id,
           username,
+          email,
           full_name: fullName,
           department,
           role,

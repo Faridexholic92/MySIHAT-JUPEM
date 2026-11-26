@@ -516,6 +516,7 @@
         var haystack = [
           row.display_name,
           row.profile.username,
+          row.profile.email || '',
           row.department,
           row.formatted_ic,
           decl ? decl.ic_number : '',
@@ -637,6 +638,7 @@
       var text = [
         row.profile.full_name,
         row.profile.username,
+        row.profile.email || '',
         row.profile.department,
         row.profile.role
       ]
@@ -676,7 +678,7 @@
           '<tr>' +
           '<td>' +
           '<div class="cell-main">' + escapeHtml(p.full_name || p.username) + (isSelf ? ' <span class="muted-sm">' + escapeHtml(t('youTag')) + '</span>' : '') + '</div>' +
-          '<div class="cell-sub mono">@' + escapeHtml(p.username) + '</div>' +
+          '<div class="cell-sub mono">@' + escapeHtml(p.username) + (p.email ? ' &bull; ' + escapeHtml(p.email) : '') + '</div>' +
           '</td>' +
           '<td>' + escapeHtml(p.department || '-') + '</td>' +
           '<td>' + roleBadge + '</td>' +
@@ -1047,9 +1049,26 @@
       root.print();
     });
 
+    function syncAutoEmailFromUsername() {
+      var emailInput = $('cu-email');
+      if (!emailInput || emailInput.dataset.manual === 'true') return;
+      var uname = ($('cu-username').value || '').trim().toLowerCase();
+      if (!uname) {
+        emailInput.value = '';
+        return;
+      }
+      if (uname.indexOf('@') !== -1) {
+        emailInput.value = uname;
+      } else {
+        var domain = ((root.APP_CONFIG && root.APP_CONFIG.AUTH_EMAIL_DOMAIN) || 'jupem.gov.my').trim().toLowerCase();
+        emailInput.value = uname + '@' + domain;
+      }
+    }
+
     function openCreateUserModal() {
       $('form-create-user').reset();
       $('cu-username').dataset.manual = 'false';
+      $('cu-email').dataset.manual = 'false';
       $('cu-password').value = generateRandomPassword(10);
       setAlert('cu-error', '');
       $('cu-success-box').classList.add('hidden');
@@ -1064,10 +1083,16 @@
       var usernameInput = $('cu-username');
       if (usernameInput.dataset.manual !== 'true') {
         usernameInput.value = suggestUsernameFromName(e.target.value);
+        syncAutoEmailFromUsername();
       }
     });
 
     $('cu-username').addEventListener('input', function (e) {
+      e.target.dataset.manual = e.target.value.trim() ? 'true' : 'false';
+      syncAutoEmailFromUsername();
+    });
+
+    $('cu-email').addEventListener('input', function (e) {
       e.target.dataset.manual = e.target.value.trim() ? 'true' : 'false';
     });
 
@@ -1095,29 +1120,35 @@
       btn.classList.add('is-loading');
       btn.textContent = t('cuSubmittingBtn');
 
-      var username = $('cu-username').value.trim().toLowerCase();
+      var rawUsername = $('cu-username').value.trim().toLowerCase();
+      var username = rawUsername.indexOf('@') !== -1 ? rawUsername.split('@')[0] : rawUsername;
+      var email = $('cu-email').value.trim().toLowerCase();
       var password = $('cu-password').value;
       var fullName = $('cu-fullname').value.trim();
 
       try {
-        await root.AppStore.adminCreateUser({
+        var created = await root.AppStore.adminCreateUser({
           full_name: fullName,
-          username: username,
+          username: rawUsername,
+          email: email,
           department: $('cu-department').value,
           role: $('cu-role').value,
           password: password
         });
 
+        var finalEmail = (created && created.email) || email || root.AppStore.resolveAuthEmail(username);
         state.lastCreatedCredentials =
           t('detailFullName') + ': ' + fullName +
-          '\n' + t('loginUsernameLabel') + ': ' + username +
+          '\nID: ' + username + ' (' + finalEmail + ')' +
           '\n' + t('loginPasswordLabel') + ': ' + password;
-        $('cu-credentials-text').textContent = 'ID: ' + username + '  |  ' + t('loginPasswordLabel') + ': ' + password;
+        $('cu-credentials-text').textContent = finalEmail + '  |  ' + t('loginPasswordLabel') + ': ' + password;
         $('cu-success-box').classList.remove('hidden');
 
         $('cu-fullname').value = '';
         $('cu-username').value = '';
         $('cu-username').dataset.manual = 'false';
+        $('cu-email').value = '';
+        $('cu-email').dataset.manual = 'false';
         $('cu-department').value = '';
         $('cu-password').value = generateRandomPassword(10);
 

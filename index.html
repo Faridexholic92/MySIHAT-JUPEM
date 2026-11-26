@@ -93,14 +93,14 @@
 
         <form id="login-form" class="stack-md" novalidate>
           <div class="field">
-            <label for="login-username" data-i18n="loginUsernameLabel">ID Pengguna</label>
+            <label for="login-username" data-i18n="loginUsernameLabel">E-mel Rasmi (@jupem.gov.my) atau ID Pengguna</label>
             <input
               type="text"
               id="login-username"
               name="username"
               autocomplete="username"
               data-i18n-placeholder="loginUsernamePlaceholder"
-              placeholder="Contoh: aminah atau admin"
+              placeholder="Contoh: nama@jupem.gov.my atau nama"
               required
             />
           </div>
@@ -575,6 +575,14 @@
           <input type="text" id="cu-username" data-i18n-placeholder="cuUsernamePlaceholder" placeholder="Contoh: nurul.izzah" required />
           <small class="field-hint" data-i18n="cuUsernameHint">
             Huruf kecil, nombor, titik (.), garis bawah (_) atau tanda sempang (-) sahaja.
+          </small>
+        </div>
+
+        <div class="field">
+          <label for="cu-email"><span data-i18n="cuEmailLabel">Alamat E-mel Rasmi (@jupem.gov.my)</span> <span class="req">*</span></label>
+          <input type="text" id="cu-email" data-i18n-placeholder="cuEmailPlaceholder" placeholder="Contoh: nurul.izzah@jupem.gov.my" required />
+          <small class="field-hint" data-i18n="cuEmailHint">
+            Diisi automatik dengan @jupem.gov.my atau boleh diubah kepada alamat e-mel penuh staf.
           </small>
         </div>
 

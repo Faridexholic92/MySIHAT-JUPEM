@@ -7,11 +7,12 @@
 -- 2. Tampal keseluruhan skrip ini dan klik RUN.
 -- 3. Matikan "Allow new users to sign up" di Authentication > Providers > Email
 --    supaya tiada pendaftaran sendiri oleh orang luar.
--- 4. Cipta akaun Admin pertama di Authentication > Users > Add user
---    (contoh: admin@staff.local, Auto Confirm User = ON), kemudian jalankan:
---      update public.profiles
---      set role = 'admin', full_name = 'Admin Utama'
---      where username = 'admin';
+-- 4. Cipta akaun Pentadbir pertama di Authentication > Users > Add user
+--    (contoh: nama@jupem.gov.my, Auto Confirm User = ON), kemudian jalankan:
+--      update public.profiles p
+--      set role = 'admin', full_name = 'Pentadbir Utama'
+--      from auth.users u
+--      where p.id = u.id and lower(u.email) = 'nama@jupem.gov.my';
 -- ============================================================================
 
 create extension if not exists pgcrypto;
@@ -20,6 +21,7 @@ create extension if not exists pgcrypto;
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   username text unique not null,
+  email text,
   full_name text,
   department text,
   role text not null default 'staff' check (role in ('staff', 'admin')),
@@ -28,7 +30,10 @@ create table if not exists public.profiles (
   updated_at timestamptz not null default now()
 );
 
+alter table public.profiles add column if not exists email text;
+
 create index if not exists idx_profiles_username on public.profiles(username);
+create index if not exists idx_profiles_email on public.profiles(email);
 create index if not exists idx_profiles_role on public.profiles(role);
 
 -- 2. Jadual Deklarasi Kesihatan Staf (satu rekod terkini bagi setiap staf)
@@ -136,9 +141,10 @@ begin
     else 'staff'
   end;
 
-  insert into public.profiles (id, username, full_name, department, role, is_active)
-  values (new.id, v_username, v_full_name, v_department, v_role, true)
-  on conflict (id) do nothing;
+  insert into public.profiles (id, username, email, full_name, department, role, is_active)
+  values (new.id, v_username, lower(new.email), v_full_name, v_department, v_role, true)
+  on conflict (id) do update
+    set email = coalesce(excluded.email, public.profiles.email);
 
   return new;
 end;
