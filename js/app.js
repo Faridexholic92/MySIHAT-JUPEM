@@ -1,7 +1,3 @@
-/**
- * Pengawal Utama Antaramuka Pengguna (UI Controller)
- * MySIHAT-JUPEM — Bento UI, Borang 3 Langkah, Analitik Seksyen & Dwibahasa (BM DBP / EN)
- */
 (function (root) {
   'use strict';
 
@@ -19,14 +15,14 @@
     'Masalah Penglihatan / Pendengaran'
   ];
 
-  var RING_CIRCUMFERENCE = 113.1; // 2 * pi * 18
-  var DONUT_CIRCUMFERENCE = 276.46; // 2 * pi * 44
+  var RING_CIRCUMFERENCE = 113.1;
+  var DONUT_CIRCUMFERENCE = 276.46;
 
   var state = {
     session: null,
-    activeView: 'login', // 'login' | 'staff-form' | 'admin'
-    activeAdminTab: 'declarations', // 'declarations' | 'users' | 'announcements'
-    currentFormStep: 1, // 1 | 2 | 3
+    activeView: 'login',
+    activeAdminTab: 'declarations',
+    currentFormStep: 1,
     myDeclaration: null,
     adminRecords: [],
     announcements: [],
@@ -185,8 +181,6 @@
     }
     return out;
   }
-
-  // ==================== PENYETEMPATAN BAHASA (BM DBP / EN) ====================
 
   function renderConditionsGrid(preserveChecked) {
     var checkedSet = {};
@@ -422,8 +416,6 @@
     applyLanguage();
   }
 
-  // ==================== KAWALAN PAPARAN & NAVIGASI ====================
-
   function renderTopbar() {
     var profile = state.session ? state.session.profile : null;
     if (!profile) {
@@ -505,8 +497,6 @@
       await loadAdminView();
     }
   }
-
-  // ==================== BORANG KAKITANGAN 3 LANGKAH (MOCKUP 1) ====================
 
   function validateStep1() {
     setAlert('hf-step1-error', '');
@@ -717,8 +707,6 @@
     }
   }
 
-  // ==================== ANALITIK & PENAPIS PENTADBIR (MOCKUPS 2 & 3) ====================
-
   function computeSectionBreakdown(records) {
     var map = {};
     records.forEach(function (r) {
@@ -851,7 +839,6 @@
       (RING_CIRCUMFERENCE * (1 - attentionPct)).toFixed(2)
     );
 
-    // Carta Bar Pematuhan Mengikut Seksyen (Interaktif)
     var activeSec = $('admin-filter-section').value || 'ALL';
     var barsList = $('section-compliance-list');
     var visibleSections = sections.filter(function (s) { return s.name !== '-'; });
@@ -879,7 +866,6 @@
       })
       .join('');
 
-    // Carta Donat Taburan Status
     $('donut-total-center').textContent = String(total);
     if (total > 0) {
       var lenHealthy = (healthy / total) * DONUT_CIRCUMFERENCE;
@@ -1299,8 +1285,6 @@
     return { headers: headers, rows: dataRows };
   }
 
-  // ==================== PENGIKATAN PERISTIWA (EVENTS) ====================
-
   function bindEvents() {
     document.querySelectorAll('.lang-btn[data-lang]').forEach(function (btn) {
       btn.addEventListener('click', function () {
@@ -1421,7 +1405,6 @@
       }
     });
 
-    // Stepper & Borang Kakitangan 3 Langkah
     $('btn-step1-next').addEventListener('click', function () {
       if (validateStep1()) setFormStep(2);
     });
@@ -1528,8 +1511,6 @@
       }
     });
 
-    // ==================== PERISTIWA PENTADBIR ====================
-
     document.querySelectorAll('.subtab[data-admin-tab], .sidebar-link[data-admin-tab]').forEach(function (tabBtn) {
       tabBtn.addEventListener('click', function () {
         switchAdminTab(tabBtn.dataset.adminTab);
@@ -1556,7 +1537,6 @@
     });
     $('admin-user-search').addEventListener('input', renderAdminUsersTable);
 
-    // Klik bar carta seksyen atau cip pantas seksyen
     $('section-compliance-list').addEventListener('click', function (e) {
       var btn = e.target.closest('[data-section-bar]');
       if (!btn) return;

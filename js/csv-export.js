@@ -1,13 +1,6 @@
-/**
- * Utiliti Eksport Data kepada CSV (serasi Microsoft Excel dengan UTF-8 BOM)
- * dan Spreadsheet Excel (.xls) beserta perlindungan formula injection.
- */
 (function (root) {
   'use strict';
 
-  /**
-   * Elakkan CSV/Excel formula injection jika sel bermula dengan =, +, -, @, tab, CR.
-   */
   function sanitizeSpreadsheetCell(value) {
     if (value === null || value === undefined) return '';
     var str = Array.isArray(value) ? value.join('; ') : String(value);
@@ -17,9 +10,6 @@
     return str;
   }
 
-  /**
-   * Escape satu sel CSV mengikut RFC 4180.
-   */
   function escapeCSVCell(value) {
     var safe = sanitizeSpreadsheetCell(value);
     if (/[",\r\n]/.test(safe)) {
@@ -28,10 +18,6 @@
     return safe;
   }
 
-  /**
-   * Bina rentetan CSV lengkap dengan UTF-8 BOM (\uFEFF) supaya Excel
-   * membaca aksara Bahasa Melayu & simbol dengan sempurna.
-   */
   function buildCSV(headers, rows) {
     var lines = [];
     lines.push(headers.map(escapeCSVCell).join(','));
@@ -50,10 +36,6 @@
       .replace(/'/g, '&apos;');
   }
 
-  /**
-   * Bina fail Excel SpreadsheetML 2003 (.xls) yang bersih tanpa kebergantungan luaran,
-   * memaksa nombor IC & telefon kekal sebagai teks (tidak bertukar jadi 9.005E+11).
-   */
   function buildExcelXML(sheetName, headers, rows) {
     var safeSheet = escapeXML(sheetName || 'Deklarasi Kesihatan').slice(0, 31);
     var headerCells = headers

@@ -1,7 +1,3 @@
-/**
- * Utiliti Pengesahan & Pengekstrakan Maklumat Nombor IC Malaysia (MyKad)
- * Format standard: YYMMDD-PB-###G (12 digit)
- */
 (function (root) {
   'use strict';
 
@@ -33,17 +29,11 @@
     return String(n).padStart(2, '0');
   }
 
-  /**
-   * Bersihkan tanda sempang dan ruang putih daripada input IC.
-   */
   function normalizeICInput(rawValue) {
     if (typeof rawValue !== 'string') return '';
     return rawValue.replace(/[\s-]/g, '').trim();
   }
 
-  /**
-   * Format 12 digit IC kepada YYMMDD-PB-###G.
-   */
   function formatIC(rawValue) {
     var digits = normalizeICInput(rawValue);
     if (!/^\d{12}$/.test(digits)) {
@@ -52,9 +42,6 @@
     return digits.slice(0, 6) + '-' + digits.slice(6, 8) + '-' + digits.slice(8, 12);
   }
 
-  /**
-   * Kira umur tepat berdasarkan tahun, bulan, hari lahir dan tarikh rujukan.
-   */
   function calculateAgeFromYMD(year, month, day, refDate) {
     var now = refDate instanceof Date ? refDate : new Date();
     var refYear = now.getFullYear();
@@ -68,9 +55,6 @@
     return age;
   }
 
-  /**
-   * Kira umur daripada tarikh lahir ISO (YYYY-MM-DD).
-   */
   function calculateAgeFromISODate(isoDate, refDate) {
     if (!isoDate || typeof isoDate !== 'string') return null;
     var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(isoDate.trim());
@@ -78,12 +62,6 @@
     return calculateAgeFromYMD(Number(m[1]), Number(m[2]), Number(m[3]), refDate);
   }
 
-  /**
-   * Sahkan dan ekstrak maklumat daripada Nombor IC Malaysia.
-   * @param {string} rawValue
-   * @param {Date} [refDate] - Tarikh rujukan pilihan untuk ujian unit
-   * @returns {object}
-   */
   function parseMalaysianIC(rawValue, refDate) {
     var now = refDate instanceof Date ? refDate : new Date();
     var digits = normalizeICInput(rawValue);

@@ -1,8 +1,3 @@
-/**
- * Modul Penyetempatan Bahasa (i18n):
- * - 'ms': Bahasa Melayu Baku (mengikut pedoman Dewan Bahasa dan Pustaka)
- * - 'en': English
- */
 (function (root) {
   'use strict';
 
@@ -100,7 +95,6 @@
       logoutBtn: 'Log Keluar',
       loggedOutToast: 'Anda telah berjaya log keluar.',
 
-      // Log Masuk
       loginHeroTitle: 'MySIHAT-JUPEM SABAH',
       loginHeading: 'Sistem Pengisytiharan Kesihatan Kakitangan',
       loginFormHeading: 'Log Masuk Portal Kakitangan',
@@ -124,7 +118,6 @@
       demoBtnStaffPending: 'Kakitangan Belum Mengisi (farid)',
       welcomeToast: 'Selamat datang, {name}!',
 
-      // Borang Kakitangan (3 Langkah)
       staffPageTitle: 'Pengisytiharan Kesihatan Kakitangan',
       staffPageDesc: 'Maklumat anda adalah sulit dan hanya dapat dilihat oleh anda sendiri serta Pentadbir yang diberi kuasa.',
       staffBannerRecorded: 'Pengisytiharan kesihatan anda telah direkodkan. Kemas kini terakhir: {time}. Anda boleh mengemas kini borang ini pada bila-bila masa.',
@@ -196,7 +189,6 @@
       errStep1Incomplete: 'Sila lengkapkan Nama Penuh dan 12 digit Nombor Kad Pengenalan yang sah sebelum meneruskan.',
       errStep2Incomplete: 'Sila pilih Status Kesihatan Semasa anda sebelum meneruskan.',
 
-      // Paparan Pentadbir
       adminPageTitle: 'Panel Pentadbir — Rekod Kesihatan Kakitangan',
       adminPageDesc: 'Pemantauan menyeluruh rekod kesihatan kakitangan mengikut seksyen, tapisan belum mengisi, eksport Excel atau CSV, dan pengurusan akaun.',
       refreshBtn: 'Muat Semula',
@@ -272,7 +264,6 @@
       btnActivate: 'Aktifkan',
       emptyUsers: 'Tiada akaun kakitangan ditemui.',
 
-      // Modal Butiran
       modalDetailTitle: 'Butiran Kesihatan: {name}',
       modalCloseBtn: 'Tutup',
       detailFullName: 'Nama Penuh',
@@ -291,7 +282,6 @@
       detailUpdated: 'Kemas Kini Terakhir',
       detailNotes: 'Catatan Tambahan',
 
-      // Modal Cipta Akaun Kakitangan
       modalCreateTitle: 'Tambah Akaun Kakitangan Baharu',
       cuFullNameLabel: 'Nama Penuh Kakitangan',
       cuFullNamePlaceholder: 'Contoh: Nurul Izzah binti Ali',
@@ -319,7 +309,6 @@
       copiedToast: 'Maklumat log masuk berjaya disalin.',
       copyFallbackToast: 'Sila salin teks tersebut secara manual.',
 
-      // Modal Set Semula & Tukar Kata Laluan
       modalResetPwTitle: 'Set Semula Kata Laluan Kakitangan',
       rpDescPrefix: 'Tetapkan kata laluan baharu untuk',
       rpNewPwLabel: 'Kata Laluan Baharu',
@@ -424,7 +413,6 @@
       logoutBtn: 'Sign Out',
       loggedOutToast: 'You have signed out.',
 
-      // Login
       loginHeroTitle: 'MySIHAT-JUPEM SABAH',
       loginHeading: 'Staff Health Declaration System',
       loginFormHeading: 'Staff Portal Sign In',
@@ -448,7 +436,6 @@
       demoBtnStaffPending: 'Pending Staff (farid)',
       welcomeToast: 'Welcome, {name}!',
 
-      // Staff Form
       staffPageTitle: 'Staff Health Declaration',
       staffPageDesc: 'Your information is confidential and visible only to yourself and authorised Administrators.',
       staffBannerRecorded: 'Your health declaration has been recorded. Last updated: {time}. You may update this form at any time.',
@@ -520,7 +507,6 @@
       errStep1Incomplete: 'Please enter your Full Name and a valid 12-digit NRIC number to continue.',
       errStep2Incomplete: 'Please select your Current Health Status to continue.',
 
-      // Admin Dashboard
       adminPageTitle: 'Admin Dashboard — Staff Health Records',
       adminPageDesc: 'Full overview by section, pending submission tracking, Excel/CSV export, and staff account management.',
       refreshBtn: 'Refresh',
@@ -833,7 +819,7 @@
         }
       }
     } catch (e) {
-      // Abaikan jika localStorage tidak tersedia
+
     }
     return currentLang;
   }
@@ -849,7 +835,7 @@
         root.localStorage.setItem(STORAGE_KEY, currentLang);
       }
     } catch (e) {
-      // Abaikan
+
     }
     if (typeof document !== 'undefined' && document.documentElement) {
       document.documentElement.lang = currentLang;

@@ -1,6 +1,3 @@
-/**
- * Lapisan Data & Pengesahan (Supabase + Mod Demo Tempatan apabila config kosong)
- */
 (function (root) {
   'use strict';
 
@@ -140,8 +137,6 @@
       confirmed_accurate: true
     };
   }
-
-  // ==================== MOD DEMO TEMPATAN (LOCALSTORAGE) ====================
 
   function createSeedDemoData() {
     var now = new Date().toISOString();
@@ -320,8 +315,6 @@
     return 'id-' + Date.now() + '-' + Math.random().toString(16).slice(2, 10);
   }
 
-  // ==================== OPERASI ANTARAMUKA BERSATU ====================
-
   async function extractEdgeFunctionError(error, fallbackMsg) {
     if (!error) return fallbackMsg;
     var name = error.name || '';
@@ -339,7 +332,7 @@
           return new Error(body.error);
         }
       } catch (e) {
-        // abaikan jika bukan JSON
+
       }
       if (error.context.status === 404) {
         var notFoundErr = new Error(

@@ -41,7 +41,7 @@ body {
   padding: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   background-color: var(--bg);
-  background-image: url("../assets/topo-bg.svg?v=20261127a");
+  background-image: url("../assets/topo-bg.svg?v=20261127b");
   background-repeat: repeat;
   background-size: 560px 560px;
   color: var(--text);
@@ -93,7 +93,6 @@ body {
   color: var(--rose);
 }
 
-/* ==================== ANIMATIONS ==================== */
 @keyframes fadeSlideUp {
   from {
     opacity: 0;
@@ -177,7 +176,6 @@ body {
   animation: fadeSlideUp 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-/* ==================== LANGUAGE SWITCHER ==================== */
 .lang-switch {
   display: inline-flex;
   align-items: center;
@@ -226,7 +224,6 @@ body {
   box-shadow: 0 1px 4px rgba(0, 92, 185, 0.28);
 }
 
-/* ==================== DEMO BANNER ==================== */
 .demo-banner {
   background: linear-gradient(90deg, #0f766e, #115e59);
   color: #ffffff;
@@ -252,7 +249,6 @@ body {
   flex-wrap: wrap;
 }
 
-/* ==================== TOPBAR ==================== */
 .topbar {
   background: var(--surface);
   border-bottom: 1px solid var(--border);
@@ -394,7 +390,6 @@ body {
   white-space: nowrap;
 }
 
-/* ==================== CARDS & LOGIN HERO ==================== */
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -600,7 +595,6 @@ body {
   gap: 6px;
 }
 
-/* ==================== FORM FIELDS ==================== */
 .field {
   display: flex;
   flex-direction: column;
@@ -691,7 +685,6 @@ body {
   color: var(--text);
 }
 
-/* ==================== BUTTONS & BADGES ==================== */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -812,7 +805,6 @@ body {
 .badge-rose { background: var(--rose-soft); color: #9f1239; }
 .badge-slate { background: var(--slate-soft); color: #475569; }
 
-/* ==================== ALERTS ==================== */
 .alert {
   padding: 12px 14px;
   border-radius: var(--radius-sm);
@@ -825,7 +817,6 @@ body {
 .alert-success { background: var(--emerald-soft); color: #065f46; border-color: #a7f3d0; }
 .alert-warning { background: var(--amber-soft); color: #92400e; border-color: #fde68a; }
 
-/* ==================== 3-STEP STAFF FORM (MOCKUP 1) ==================== */
 .page-head {
   display: flex;
   align-items: flex-start;
@@ -975,7 +966,6 @@ body {
   border-top: 1px solid var(--border);
 }
 
-/* IC Auto-Calc Bento Card */
 .ic-preview-card {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -1025,7 +1015,6 @@ body {
   animation: popValue 0.34s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* Status Radio Cards */
 .status-radio-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1077,7 +1066,6 @@ body {
 .status-card-title { font-weight: 700; font-size: 0.92rem; }
 .status-card-desc { font-size: 0.78rem; color: var(--text-muted); margin-top: 2px; }
 
-/* Conditions Switch Pill Grid (Mockup 1 Style) */
 .conditions-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
@@ -1167,7 +1155,6 @@ body {
   accent-color: var(--primary);
 }
 
-/* ==================== ADMIN BENTO WORKSPACE (MOCKUPS 2 & 3) ==================== */
 .admin-shell {
   display: grid;
   grid-template-columns: 236px minmax(0, 1fr);
@@ -1304,7 +1291,6 @@ body:has(#demo-banner:not(.hidden)):has(#announcement-ticker:not(.hidden)) .admi
   flex-wrap: wrap;
 }
 
-/* KPI Cards with SVG Rings */
 .kpi-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -1411,7 +1397,6 @@ body:has(#demo-banner:not(.hidden)):has(#announcement-ticker:not(.hidden)) .admi
   color: var(--primary);
 }
 
-/* Analytics Bento Row */
 .analytics-grid {
   display: grid;
   grid-template-columns: 1.55fr 1fr;
@@ -1490,7 +1475,6 @@ body:has(#demo-banner:not(.hidden)):has(#announcement-ticker:not(.hidden)) .admi
   white-space: nowrap;
 }
 
-/* Donut Chart */
 .donut-layout {
   display: flex;
   align-items: center;
@@ -1574,7 +1558,6 @@ body:has(#demo-banner:not(.hidden)):has(#announcement-ticker:not(.hidden)) .admi
 .dot-amber { background: var(--amber); }
 .dot-rose { background: var(--rose); }
 
-/* Subtabs & Filter Bar */
 .subtabs {
   display: flex;
   flex-wrap: wrap;
@@ -1778,7 +1761,6 @@ body:has(#demo-banner:not(.hidden)):has(#announcement-ticker:not(.hidden)) .admi
   font-size: 0.9rem;
 }
 
-/* ==================== MODALS ==================== */
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -1875,7 +1857,6 @@ body:has(#demo-banner:not(.hidden)):has(#announcement-ticker:not(.hidden)) .admi
   font-size: 0.84rem;
 }
 
-/* ==================== TOASTS ==================== */
 .toast-container {
   position: fixed;
   bottom: 20px;
@@ -1903,7 +1884,6 @@ body:has(#demo-banner:not(.hidden)):has(#announcement-ticker:not(.hidden)) .admi
 .toast.toast-success { background: #065f46; }
 .toast.toast-error { background: #9f1239; }
 
-/* ==================== ANNOUNCEMENT TICKER & EDITOR ==================== */
 @keyframes tickerScroll {
   0% { transform: translateX(0); }
   100% { transform: translateX(-100%); }
@@ -2060,7 +2040,6 @@ body:has(#demo-banner:not(.hidden)):has(#announcement-ticker:not(.hidden)) .admi
   margin-top: 6px;
 }
 
-/* ==================== RESPONSIVE & PRINT ==================== */
 @media (min-width: 1041px) {
   body.in-admin-view #topbar {
     display: none;
