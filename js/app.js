@@ -17,13 +17,18 @@
 
   var RING_CIRCUMFERENCE = 113.1;
   var DONUT_CIRCUMFERENCE = 276.46;
+  var ADMIN_WHATSAPP_NUMBER = '60168681143';
 
   var state = {
     session: null,
     activeView: 'login',
     activeAdminTab: 'declarations',
     currentFormStep: 1,
+    cycles: [],
+    activeCycleCode: '2026',
+    selectedAdminCycleCode: '2026',
     myDeclaration: null,
+    myHistory: [],
     adminRecords: [],
     announcements: [],
     publicAnnouncements: [],
@@ -231,12 +236,21 @@
       }).join('');
     condSelect.value = currentCond;
 
-    var roleSelect = $('cu-role');
-    var currentRole = roleSelect.value || 'staff';
-    roleSelect.innerHTML =
+    var roleHtml =
       '<option value="staff">' + escapeHtml(t('cuRoleStaff')) + '</option>' +
       '<option value="admin">' + escapeHtml(t('cuRoleAdmin')) + '</option>';
+
+    var roleSelect = $('cu-role');
+    var currentRole = roleSelect.value || 'staff';
+    roleSelect.innerHTML = roleHtml;
     roleSelect.value = currentRole;
+
+    var editRoleSelect = $('eu-role');
+    if (editRoleSelect) {
+      var currentEditRole = editRoleSelect.value || 'staff';
+      editRoleSelect.innerHTML = roleHtml;
+      editRoleSelect.value = currentEditRole;
+    }
   }
 
   function updatePasswordToggleLabels() {
@@ -247,17 +261,30 @@
     });
   }
 
+  function formatCycleOptionLabel(c) {
+    if (!c) return '2026';
+    return c.is_active ? c.cycle_code + ' (' + t('cycleActiveLabel') + ')' : c.cycle_code;
+  }
+
   function updateStaffStatusBanner() {
     if (!state.session) return;
     var banner = $('staff-status-banner');
     var badgeEl = $('staff-submission-badge');
+    var cycleBadgeEl = $('staff-cycle-badge');
     var saveBtn = $('btn-save-declaration');
     var decl = state.myDeclaration;
+    var cycleLabel = state.activeCycleCode || '2026';
+
+    if (cycleBadgeEl) {
+      cycleBadgeEl.textContent = t('cycleActiveLabel') + ': ' + cycleLabel;
+      cycleBadgeEl.classList.remove('hidden');
+    }
 
     if (decl) {
       badgeEl.innerHTML = statusBadgeHTML(decl.health_status);
       banner.className = 'alert alert-success';
       banner.textContent = t('staffBannerRecorded', {
+        cycle: cycleLabel,
         time: formatDateTime(decl.updated_at || decl.submitted_at)
       });
       banner.classList.remove('hidden');
@@ -265,10 +292,57 @@
     } else {
       badgeEl.innerHTML = statusBadgeHTML('Belum Mengisi');
       banner.className = 'alert alert-info';
-      banner.textContent = t('staffBannerPending');
+      banner.textContent = t('staffBannerPending', { cycle: cycleLabel });
       banner.classList.remove('hidden');
       saveBtn.textContent = t('submitDeclBtn');
     }
+  }
+
+  function renderHistoryListHtml(items) {
+    if (!Array.isArray(items) || items.length === 0) {
+      return '<div class="muted-sm">' + escapeHtml(t('historyEmptyText')) + '</div>';
+    }
+    return items
+      .map(function (h) {
+        var condList = Array.isArray(h.conditions) ? h.conditions.map(function (c) {
+          return root.AppI18n.translateCondition(c);
+        }) : [];
+        var extraParts = [];
+        if (condList.length > 0) extraParts.push(condList.join(', '));
+        if (h.other_conditions) extraParts.push(h.other_conditions);
+        if (h.medications) extraParts.push(t('medsShort') + ' ' + h.medications);
+        var summaryText = extraParts.length > 0 ? extraParts.join(' • ') : t('noConditionsReported');
+        var roleGradeParts = [];
+        if (h.department) roleGradeParts.push(h.department);
+        if (h.position) roleGradeParts.push(h.position + (h.grade ? ' (' + h.grade + ')' : ''));
+        else if (h.grade) roleGradeParts.push(h.grade);
+
+        return (
+          '<div class="history-item">' +
+          '<div class="history-item-top">' +
+          '<div><span class="badge badge-slate mono">' + escapeHtml(h.cycle_code || '2026') + '</span> ' + statusBadgeHTML(h.health_status) + '</div>' +
+          '<span class="history-item-meta">' + escapeHtml(formatDateTime(h.recorded_at || h.updated_at || h.submitted_at)) + '</span>' +
+          '</div>' +
+          (roleGradeParts.length ? '<div class="history-item-meta">' + escapeHtml(roleGradeParts.join(' • ')) + '</div>' : '') +
+          '<div class="cell-sub">' + escapeHtml(summaryText) + '</div>' +
+          '</div>'
+        );
+      })
+      .join('');
+  }
+
+  function renderStaffHistoryCard() {
+    var card = $('staff-history-card');
+    var list = $('staff-history-list');
+    if (!card || !list) return;
+    var history = state.myHistory || [];
+    if (history.length === 0) {
+      card.classList.add('hidden');
+      list.innerHTML = '';
+      return;
+    }
+    list.innerHTML = renderHistoryListHtml(history);
+    card.classList.remove('hidden');
   }
 
   function applyLanguage() {
@@ -307,11 +381,17 @@
       renderTopbar();
       if (state.activeView === 'staff-form') {
         updateStaffStatusBanner();
+        renderStaffHistoryCard();
+        var prefillNotice = $('staff-prefill-notice');
+        if (prefillNotice && !prefillNotice.classList.contains('hidden')) {
+          prefillNotice.textContent = t('cycleStaffPrefillNotice', { cycle: state.activeCycleCode || '2026' });
+        }
         updateICPreview($('hf-ic').value, false);
         if (state.currentFormStep === 3) {
           renderStep3Summary();
         }
       } else if (state.activeView === 'admin') {
+        renderAdminCycleSelector();
         renderAdminAllSections();
         renderAdminAnnouncementsTable();
         if (state.detailModalUserId && !$('modal-detail').classList.contains('hidden')) {
@@ -555,6 +635,7 @@
       '<div class="detail-item"><div class="detail-label">' + escapeHtml(t('summaryAgeGender')) + '</div><div class="detail-value">' + escapeHtml(ageGenderText) + '</div></div>' +
       '<div class="detail-item"><div class="detail-label">' + escapeHtml(t('summaryDept')) + '</div><div class="detail-value">' + escapeHtml($('hf-department').value.trim() || '-') + '</div></div>' +
       '<div class="detail-item"><div class="detail-label">' + escapeHtml(t('summaryPosition')) + '</div><div class="detail-value">' + escapeHtml($('hf-position').value.trim() || '-') + '</div></div>' +
+      '<div class="detail-item"><div class="detail-label">' + escapeHtml(t('summaryGrade')) + '</div><div class="detail-value">' + escapeHtml($('hf-grade').value.trim() || '-') + '</div></div>' +
       '<div class="detail-item"><div class="detail-label">' + escapeHtml(t('summaryStatus')) + '</div><div class="detail-value">' + (statusVal ? statusBadgeHTML(statusVal) : '-') + '</div></div>' +
       '<div class="detail-item"><div class="detail-label">' + escapeHtml(t('summaryConditions')) + '</div><div class="detail-value">' + escapeHtml(condSummary) + '</div></div>';
   }
@@ -655,19 +736,22 @@
     });
   }
 
-  function populateStaffForm(profile, declaration) {
+  function populateStaffForm(profile, declaration, previousTemplate) {
     var form = $('health-form');
     form.reset();
     state.lastValidICDigits = '';
     setAlert('hf-error', '');
     setAlert('hf-step1-error', '');
     setAlert('hf-step2-error', '');
+    var prefillEl = $('staff-prefill-notice');
+    if (prefillEl) prefillEl.classList.add('hidden');
 
     if (declaration) {
       $('hf-full-name').value = declaration.full_name || profile.full_name || '';
       $('hf-ic').value = root.ICParser.formatIC(declaration.ic_number || '');
       $('hf-department').value = declaration.department || profile.department || '';
       $('hf-position').value = declaration.position || profile.position || '';
+      $('hf-grade').value = declaration.grade || profile.grade || '';
       $('hf-phone').value = declaration.phone || '';
       $('hf-other-conditions').value = declaration.other_conditions || '';
       $('hf-medications').value = declaration.medications || '';
@@ -683,10 +767,23 @@
       form.querySelectorAll('input[name="conditions"]').forEach(function (cb) {
         cb.checked = selectedConds.indexOf(cb.value) !== -1;
       });
+    } else if (previousTemplate) {
+      $('hf-full-name').value = previousTemplate.full_name || profile.full_name || '';
+      $('hf-ic').value = root.ICParser.formatIC(previousTemplate.ic_number || '');
+      $('hf-department').value = previousTemplate.department || profile.department || '';
+      $('hf-position').value = previousTemplate.position || profile.position || '';
+      $('hf-grade').value = previousTemplate.grade || profile.grade || '';
+      $('hf-phone').value = previousTemplate.phone || '';
+      $('hf-emergency').value = previousTemplate.emergency_contact || '';
+      if (prefillEl) {
+        prefillEl.textContent = t('cycleStaffPrefillNotice', { cycle: state.activeCycleCode || '2026' });
+        prefillEl.classList.remove('hidden');
+      }
     } else {
       $('hf-full-name').value = profile.full_name || '';
       $('hf-department').value = profile.department || '';
       $('hf-position').value = profile.position || '';
+      $('hf-grade').value = profile.grade || '';
     }
 
     updateStaffStatusBanner();
@@ -699,9 +796,26 @@
   async function loadStaffForm() {
     var profile = state.session.profile;
     try {
-      var declaration = await root.AppStore.getMyDeclaration(profile.id);
+      var cycles = await root.AppStore.getDeclarationCycles();
+      state.cycles = cycles;
+      var activeCycle = cycles.find(function (c) { return c.is_active; }) || cycles[0];
+      state.activeCycleCode = activeCycle ? activeCycle.cycle_code : '2026';
+
+      var results = await Promise.all([
+        root.AppStore.getMyDeclaration(profile.id, state.activeCycleCode),
+        root.AppStore.getUserDeclarationHistory(profile.id)
+      ]);
+      var declaration = results[0];
       state.myDeclaration = declaration;
-      populateStaffForm(profile, declaration);
+      state.myHistory = results[1] || [];
+
+      var previousTemplate = null;
+      if (!declaration) {
+        previousTemplate = await root.AppStore.getMyLatestDeclaration(profile.id);
+      }
+
+      populateStaffForm(profile, declaration, previousTemplate);
+      renderStaffHistoryCard();
     } catch (err) {
       setAlert('hf-error', root.AppI18n.translateStoreError(err));
     }
@@ -924,6 +1038,7 @@
           row.profile.email || '',
           row.department,
           row.position || '',
+          row.grade || '',
           row.formatted_ic,
           decl ? decl.ic_number : '',
           row.health_status,
@@ -941,11 +1056,25 @@
     });
   }
 
+  function updatePrintReportMeta(rowCount) {
+    var metaEl = $('print-report-meta');
+    if (!metaEl) return;
+    var secEl = $('admin-filter-section');
+    var secLabel = secEl && secEl.value !== 'ALL' ? secEl.value : t('filterAllSections');
+    metaEl.textContent = t('printMetaText', {
+      cycle: state.selectedAdminCycleCode || state.activeCycleCode || '2026',
+      section: secLabel,
+      count: rowCount,
+      time: formatDateTime(new Date().toISOString())
+    });
+  }
+
   function renderAdminDeclarationsTable() {
     var rows = getFilteredDeclarations();
     var tbody = $('admin-declarations-tbody');
     var empty = $('admin-declarations-empty');
     var statusFilter = $('admin-filter-status').value || 'ALL';
+    updatePrintReportMeta(rows.length);
 
     var badgeEl = $('admin-result-badge');
     if (statusFilter === 'Belum Mengisi') {
@@ -971,7 +1100,7 @@
 
     empty.classList.add('hidden');
     tbody.innerHTML = rows
-      .map(function (row) {
+      .map(function (row, idx) {
         var decl = row.declaration;
         var condHTML = '-';
         if (decl) {
@@ -1012,8 +1141,16 @@
         var initials = getInitials(row.display_name);
         var avClass = getAvatarColorClass(row.profile.username);
 
+        var posGrade = '';
+        if (row.position && row.position !== '-') {
+          posGrade = row.position + (row.grade && row.grade !== '-' ? ' (' + row.grade + ')' : '');
+        } else if (row.grade && row.grade !== '-') {
+          posGrade = row.grade;
+        }
+
         return (
           '<tr>' +
+          '<td class="print-only-col">' + (idx + 1) + '</td>' +
           '<td class="td-staff">' +
           '<div class="staff-cell-wrap">' +
           '<span class="avatar-circle ' + avClass + '">' + escapeHtml(initials) + '</span>' +
@@ -1024,8 +1161,10 @@
           '</div>' +
           '</td>' +
           '<td data-label="' + escapeHtml(t('thSection')) + '">' +
+          '<div class="td-stack">' +
           '<div class="cell-main">' + escapeHtml(row.department) + '</div>' +
-          (row.position && row.position !== '-' ? '<div class="cell-sub">' + escapeHtml(row.position) + '</div>' : '') +
+          (posGrade ? '<div class="cell-sub">' + escapeHtml(posGrade) + '</div>' : '') +
+          '</div>' +
           '</td>' +
           '<td class="mono" data-label="' + escapeHtml(t('thIC')) + '">' + escapeHtml(row.formatted_ic) + '</td>' +
           '<td data-label="' + escapeHtml(t('thAgeGender')) + '">' + ageHTML + '</td>' +
@@ -1050,6 +1189,8 @@
         row.profile.username,
         row.profile.email || '',
         row.profile.department,
+        row.profile.position || '',
+        row.profile.grade || '',
         row.profile.role
       ]
         .join(' ')
@@ -1086,6 +1227,13 @@
         var initials = getInitials(p.full_name || p.username);
         var avClass = getAvatarColorClass(p.username);
 
+        var userPosGrade = '';
+        if (p.position) {
+          userPosGrade = p.position + (p.grade ? ' (' + p.grade + ')' : '');
+        } else if (p.grade) {
+          userPosGrade = p.grade;
+        }
+
         return (
           '<tr>' +
           '<td class="td-staff">' +
@@ -1098,14 +1246,17 @@
           '</div>' +
           '</td>' +
           '<td data-label="' + escapeHtml(t('thDept')) + '">' +
+          '<div class="td-stack">' +
           '<div class="cell-main">' + escapeHtml(p.department || '-') + '</div>' +
-          (p.position ? '<div class="cell-sub">' + escapeHtml(p.position) + '</div>' : '') +
+          (userPosGrade ? '<div class="cell-sub">' + escapeHtml(userPosGrade) + '</div>' : '') +
+          '</div>' +
           '</td>' +
           '<td data-label="' + escapeHtml(t('thRole')) + '">' + roleBadge + '</td>' +
           '<td data-label="' + escapeHtml(t('thAccountStatus')) + '">' + activeBadge + '</td>' +
           '<td data-label="' + escapeHtml(t('thDeclStatus')) + '">' + declBadge + '</td>' +
           '<td class="td-actions no-print" data-label="' + escapeHtml(t('thActions')) + '">' +
           '<div class="action-group">' +
+          '<button type="button" class="btn btn-xs btn-outline" data-action="edit-user" data-userid="' + escapeHtml(p.id) + '">' + escapeHtml(t('btnEditUser')) + '</button>' +
           '<button type="button" class="btn btn-xs btn-outline" data-action="reset-password" data-userid="' + escapeHtml(p.id) + '" data-label="' + escapeHtml(p.full_name || p.username) + '">' + escapeHtml(t('btnResetPw')) + '</button>' +
           (isSelf
             ? ''
@@ -1132,12 +1283,20 @@
     }
 
     empty.classList.add('hidden');
+    var nowMs = Date.now();
     tbody.innerHTML = items
       .map(function (a) {
         var meta = levelBadgeMeta(a.level);
-        var activeBadge = a.is_active
-          ? '<span class="badge badge-emerald">' + escapeHtml(t('badgeActive')) + '</span>'
-          : '<span class="badge badge-slate">' + escapeHtml(t('badgeInactive')) + '</span>';
+        var isExpired = Boolean(a.expires_at && !Number.isNaN(Date.parse(a.expires_at)) && Date.parse(a.expires_at) <= nowMs);
+        var activeBadge;
+        if (!a.is_active) {
+          activeBadge = '<span class="badge badge-slate">' + escapeHtml(t('badgeInactive')) + '</span>';
+        } else if (isExpired) {
+          activeBadge = '<span class="badge badge-amber">' + escapeHtml(t('badgeExpired')) + '</span>';
+        } else {
+          activeBadge = '<span class="badge badge-emerald">' + escapeHtml(t('badgeActive')) + '</span>';
+        }
+        var expiryText = a.expires_at ? formatDateTime(a.expires_at) : t('annNoExpiry');
         var toggleLabel = a.is_active ? t('annHideTickerBtn') : t('annShowTickerBtn');
 
         return (
@@ -1148,6 +1307,7 @@
           '</td>' +
           '<td data-label="' + escapeHtml(t('thAnnLevel')) + '"><span class="badge ' + meta.badgeClass + '">' + escapeHtml(meta.text) + '</span></td>' +
           '<td data-label="' + escapeHtml(t('thAnnStatus')) + '">' + activeBadge + '</td>' +
+          '<td data-label="' + escapeHtml(t('thAnnExpiry')) + '">' + escapeHtml(expiryText) + '</td>' +
           '<td data-label="' + escapeHtml(t('thUpdatedAt')) + '">' + escapeHtml(formatDateTime(a.updated_at || a.created_at)) + '</td>' +
           '<td class="td-actions no-print" data-label="' + escapeHtml(t('thActions')) + '">' +
           '<div class="action-group">' +
@@ -1161,6 +1321,22 @@
       .join('');
   }
 
+  function renderAdminCycleSelector() {
+    var sel = $('admin-cycle-select');
+    if (!sel) return;
+    var cycles = state.cycles && state.cycles.length > 0
+      ? state.cycles
+      : [{ cycle_code: '2026', title: 'Kitaran 2026', is_active: true }];
+    sel.innerHTML = cycles
+      .map(function (c) {
+        return '<option value="' + escapeHtml(c.cycle_code) + '">' + escapeHtml(formatCycleOptionLabel(c)) + '</option>';
+      })
+      .join('');
+    var hasSelected = cycles.some(function (c) { return c.cycle_code === state.selectedAdminCycleCode; });
+    sel.value = hasSelected ? state.selectedAdminCycleCode : (state.activeCycleCode || cycles[0].cycle_code);
+    state.selectedAdminCycleCode = sel.value;
+  }
+
   function renderAdminAllSections() {
     var sections = computeSectionBreakdown(state.adminRecords);
     renderSectionFilterControls(sections);
@@ -1172,15 +1348,30 @@
 
   async function loadAdminView() {
     try {
+      var cycles = await root.AppStore.getDeclarationCycles();
+      state.cycles = cycles;
+      var activeCycle = cycles.find(function (c) { return c.is_active; }) || cycles[0];
+      state.activeCycleCode = activeCycle ? activeCycle.cycle_code : '2026';
+      if (!state.selectedAdminCycleCode || !cycles.some(function (c) { return c.cycle_code === state.selectedAdminCycleCode; })) {
+        state.selectedAdminCycleCode = state.activeCycleCode;
+      }
+      renderAdminCycleSelector();
+
       var results = await Promise.all([
-        root.AppStore.getAdminDashboardData(),
+        root.AppStore.getAdminDashboardData(state.selectedAdminCycleCode),
         root.AppStore.getAllAnnouncements()
       ]);
       state.adminRecords = results[0];
       state.announcements = results[1];
       renderAdminAllSections();
       renderAdminAnnouncementsTable();
-      state.publicAnnouncements = state.announcements.filter(function (a) { return a.is_active; });
+      var nowMs = Date.now();
+      state.publicAnnouncements = state.announcements.filter(function (a) {
+        if (!a || !a.is_active) return false;
+        if (!a.expires_at) return true;
+        var exp = Date.parse(a.expires_at);
+        return Number.isNaN(exp) || exp > nowMs;
+      });
       renderAnnouncementTicker(state.publicAnnouncements);
     } catch (err) {
       showToast(root.AppI18n.translateStoreError(err), 'error');
@@ -1234,6 +1425,7 @@
       '<div class="detail-item"><div class="detail-label">' + escapeHtml(t('detailFullName')) + '</div><div class="detail-value">' + escapeHtml(row.display_name) + '</div></div>' +
       '<div class="detail-item"><div class="detail-label">' + escapeHtml(t('detailUserDept')) + '</div><div class="detail-value">' + escapeHtml(row.profile.email || '@' + row.profile.username) + ' &bull; ' + escapeHtml(row.department) + '</div></div>' +
       '<div class="detail-item"><div class="detail-label">' + escapeHtml(t('detailPosition')) + '</div><div class="detail-value">' + escapeHtml(row.position || '-') + '</div></div>' +
+      '<div class="detail-item"><div class="detail-label">' + escapeHtml(t('detailGrade')) + '</div><div class="detail-value">' + escapeHtml(row.grade || '-') + '</div></div>' +
       '<div class="detail-item"><div class="detail-label">' + escapeHtml(t('detailIC')) + '</div><div class="detail-value mono">' + escapeHtml(row.formatted_ic) + '</div></div>' +
       '<div class="detail-item"><div class="detail-label">' + escapeHtml(t('detailAgeGenderDob')) + '</div><div class="detail-value"><strong>' + escapeHtml(t('ageUnit', { age: row.live_age })) + '</strong> &bull; ' + escapeHtml(root.AppI18n.translateGender(row.gender)) + ' &bull; ' + escapeHtml(formatISODate(row.birth_date)) + '</div></div>' +
       '<div class="detail-item"><div class="detail-label">' + escapeHtml(t('detailBirthState')) + '</div><div class="detail-value">' + escapeHtml(root.AppI18n.translateBirthState(row.birth_state)) + '</div></div>' +
@@ -1245,9 +1437,22 @@
       '<div class="detail-item"><div class="detail-label">' + escapeHtml(t('detailEmergency')) + '</div><div class="detail-value">' + escapeHtml(decl.emergency_contact || '-') + '</div></div>' +
       '<div class="detail-item"><div class="detail-label">' + escapeHtml(t('detailUpdated')) + '</div><div class="detail-value">' + escapeHtml(formatDateTime(decl.updated_at || decl.submitted_at)) + '</div></div>' +
       '<div class="detail-item full"><div class="detail-label">' + escapeHtml(t('detailNotes')) + '</div><div class="detail-value">' + escapeHtml(decl.notes || '-') + '</div></div>' +
-      '</div>';
+      '</div>' +
+      '<div id="detail-history-section" class="detail-history-section hidden"></div>';
 
     openModal('modal-detail');
+
+    root.AppStore.getUserDeclarationHistory(userId)
+      .then(function (hist) {
+        if (state.detailModalUserId !== userId) return;
+        var container = $('detail-history-section');
+        if (!container) return;
+        container.innerHTML =
+          '<h4 class="detail-history-heading">' + escapeHtml(t('detailHistoryHeading', { count: hist.length })) + '</h4>' +
+          '<div class="history-list">' + renderHistoryListHtml(hist) + '</div>';
+        container.classList.remove('hidden');
+      })
+      .catch(function () {});
   }
 
   function buildExportDataset() {
@@ -1318,6 +1523,10 @@
       root.AppStore.resetDemoData();
       state.session = null;
       state.myDeclaration = null;
+      state.myHistory = [];
+      state.cycles = [];
+      state.activeCycleCode = '2026';
+      state.selectedAdminCycleCode = '2026';
       state.adminRecords = [];
       showToast(t('demoResetToast'), 'success');
       switchView('login');
@@ -1354,10 +1563,45 @@
       }
     });
 
+    $('btn-forgot-password').addEventListener('click', function () {
+      $('form-forgot-password').reset();
+      setAlert('fp-error', '');
+      var typedId = ($('login-username').value || '').trim();
+      if (typedId) {
+        $('fp-identifier').value = typedId;
+      }
+      openModal('modal-forgot-password');
+    });
+
+    $('form-forgot-password').addEventListener('submit', function (e) {
+      e.preventDefault();
+      setAlert('fp-error', '');
+      var fullName = ($('fp-full-name').value || '').trim();
+      var identifier = ($('fp-identifier').value || '').trim();
+      var dept = ($('fp-department').value || '').trim();
+      if (!fullName || !identifier) {
+        setAlert('fp-error', t('fpValidationErr'));
+        return;
+      }
+      var deptPart = dept ? ', ' + dept : '';
+      var msg = t('fpWaTemplate', {
+        name: fullName,
+        identifier: identifier,
+        deptPart: deptPart
+      });
+      var waUrl = 'https://wa.me/' + ADMIN_WHATSAPP_NUMBER + '?text=' + encodeURIComponent(msg);
+      root.open(waUrl, '_blank', 'noopener,noreferrer');
+      closeModal('modal-forgot-password');
+    });
+
     async function handleLogout() {
       await root.AppStore.signOut();
       state.session = null;
       state.myDeclaration = null;
+      state.myHistory = [];
+      state.cycles = [];
+      state.activeCycleCode = '2026';
+      state.selectedAdminCycleCode = '2026';
       state.adminRecords = [];
       showToast(t('loggedOutToast'));
       await switchView('login');
@@ -1490,6 +1734,7 @@
           ic_number: $('hf-ic').value,
           department: $('hf-department').value,
           position: $('hf-position').value,
+          grade: $('hf-grade').value,
           phone: $('hf-phone').value,
           health_status: healthStatus,
           conditions: selectedConditions,
@@ -1498,9 +1743,11 @@
           emergency_contact: $('hf-emergency').value,
           notes: $('hf-notes').value,
           confirmed_accurate: $('hf-confirm').checked
-        });
+        }, state.activeCycleCode);
         state.myDeclaration = saved;
-        populateStaffForm(state.session.profile, saved);
+        state.myHistory = await root.AppStore.getUserDeclarationHistory(state.session.profile.id);
+        populateStaffForm(state.session.profile, saved, null);
+        renderStaffHistoryCard();
         showToast(t('declSavedToast'), 'success');
       } catch (err) {
         setAlert('hf-error', root.AppI18n.translateStoreError(err));
@@ -1526,6 +1773,67 @@
     $('btn-refresh-admin').addEventListener('click', async function () {
       await loadAdminView();
       showToast(t('refreshDoneToast'));
+    });
+
+    $('admin-cycle-select').addEventListener('change', async function (e) {
+      state.selectedAdminCycleCode = e.target.value || state.activeCycleCode || '2026';
+      await loadAdminView();
+    });
+
+    $('btn-open-new-cycle').addEventListener('click', function () {
+      $('form-new-cycle').reset();
+      setAlert('nc-error', '');
+      var activeNum = parseInt(state.activeCycleCode, 10);
+      var nextCode = !Number.isNaN(activeNum) ? String(activeNum + 1) : String(new Date().getFullYear() + 1);
+      $('nc-code').value = nextCode;
+      $('nc-title').value = (root.AppI18n.getLanguage() === 'en' ? 'Health Declaration Cycle ' : 'Kitaran Pengisytiharan ') + nextCode;
+      openModal('modal-new-cycle');
+    });
+
+    $('form-new-cycle').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      setAlert('nc-error', '');
+      var btn = $('btn-submit-new-cycle');
+      btn.disabled = true;
+      btn.classList.add('is-loading');
+      try {
+        var createdCycle = await root.AppStore.adminStartNewCycle($('nc-code').value, $('nc-title').value);
+        state.activeCycleCode = createdCycle.cycle_code;
+        state.selectedAdminCycleCode = createdCycle.cycle_code;
+        closeModal('modal-new-cycle');
+        await loadAdminView();
+        showToast(t('ncStartedToast', { title: createdCycle.title || createdCycle.cycle_code }), 'success');
+      } catch (err) {
+        setAlert('nc-error', root.AppI18n.translateStoreError(err));
+      } finally {
+        btn.disabled = false;
+        btn.classList.remove('is-loading');
+      }
+    });
+
+    $('btn-copy-pending-emails').addEventListener('click', async function () {
+      var rows = getFilteredDeclarations();
+      var seen = {};
+      var emails = [];
+      rows.forEach(function (r) {
+        if (!r.profile.is_active || r.has_declared) return;
+        var em = (r.profile.email || root.AppStore.resolveAuthEmail(r.profile.username) || '').trim().toLowerCase();
+        if (em && !seen[em]) {
+          seen[em] = true;
+          emails.push(em);
+        }
+      });
+      if (emails.length === 0) {
+        showToast(t('noPendingEmailsToast'), 'info');
+        return;
+      }
+      var joined = emails.join(', ');
+      try {
+        await navigator.clipboard.writeText(joined);
+        showToast(t('copiedPendingEmailsToast', { count: emails.length }), 'success');
+      } catch (err) {
+        root.prompt(t('copyPendingFallbackPrompt'), joined);
+      }
     });
 
     $('admin-search').addEventListener('input', renderAdminDeclarationsTable);
@@ -1585,6 +1893,7 @@
     });
 
     $('btn-print-report').addEventListener('click', function () {
+      updatePrintReportMeta(getFilteredDeclarations().length);
       root.print();
     });
 
@@ -1672,6 +1981,7 @@
           email: email,
           department: $('cu-department').value,
           position: $('cu-position').value,
+          grade: $('cu-grade').value,
           role: $('cu-role').value,
           password: password
         });
@@ -1691,6 +2001,7 @@
         $('cu-email').dataset.manual = 'false';
         $('cu-department').value = '';
         $('cu-position').value = '';
+        $('cu-grade').value = '';
         $('cu-password').value = generateRandomPassword(10);
 
         await loadAdminView();
@@ -1730,7 +2041,21 @@
       var action = btn.dataset.action;
       var userId = btn.dataset.userid;
 
-      if (action === 'reset-password') {
+      if (action === 'edit-user') {
+        var targetRow = state.adminRecords.find(function (r) { return r.profile.id === userId; });
+        if (!targetRow) return;
+        var targetProfile = targetRow.profile;
+        $('eu-user-id').value = targetProfile.id;
+        $('eu-username-display').textContent = '@' + targetProfile.username + (targetProfile.email ? ' • ' + targetProfile.email : '');
+        $('eu-fullname').value = targetProfile.full_name || '';
+        $('eu-department').value = targetProfile.department || '';
+        $('eu-position').value = targetProfile.position || '';
+        $('eu-grade').value = targetProfile.grade || '';
+        $('eu-role').value = targetProfile.role === 'admin' ? 'admin' : 'staff';
+        $('eu-role').disabled = targetProfile.id === state.session.profile.id;
+        setAlert('eu-error', '');
+        openModal('modal-edit-user');
+      } else if (action === 'reset-password') {
         $('rp-user-id').value = userId;
         $('rp-user-label').textContent = btn.dataset.label || '-';
         $('rp-new-password').value = generateRandomPassword(10);
@@ -1757,6 +2082,32 @@
         } catch (err) {
           showToast(root.AppI18n.translateStoreError(err), 'error');
         }
+      }
+    });
+
+    $('form-edit-user').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      setAlert('eu-error', '');
+      var btn = $('btn-submit-edit-user');
+      btn.disabled = true;
+      btn.classList.add('is-loading');
+      try {
+        await root.AppStore.adminUpdateUser({
+          user_id: $('eu-user-id').value,
+          full_name: $('eu-fullname').value,
+          department: $('eu-department').value,
+          position: $('eu-position').value,
+          grade: $('eu-grade').value,
+          role: $('eu-role').value
+        }, state.session.profile.id);
+        closeModal('modal-edit-user');
+        await loadAdminView();
+        showToast(t('euSavedToast'), 'success');
+      } catch (err) {
+        setAlert('eu-error', root.AppI18n.translateStoreError(err));
+      } finally {
+        btn.disabled = false;
+        btn.classList.remove('is-loading');
       }
     });
 
@@ -1829,10 +2180,12 @@
           title: $('ann-title').value,
           level: $('ann-level').value,
           message: $('ann-message').value,
+          expires_at: $('ann-expires-at').value,
           is_active: $('ann-active-check').checked
         }, state.session.profile.id);
         $('ann-title').value = '';
         $('ann-message').value = '';
+        $('ann-expires-at').value = '';
         await loadAdminView();
         showToast(t('annPublishedToast'), 'success');
       } catch (err) {

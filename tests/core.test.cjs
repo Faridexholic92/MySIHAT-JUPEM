@@ -307,4 +307,116 @@ test('Ciri baharu v2: polisi kata laluan >=8, tukar kata laluan wajib log masuk 
   }
 });
 
+test('Ciri baharu v3: gred SSPA, sunting profil kakitangan, kitaran berkala, arkib sejarah, dan tarikh tamat ticker', async () => {
+  const origUrl = AppConfig.SUPABASE_URL;
+  const origKey = AppConfig.SUPABASE_ANON_KEY;
+  AppConfig.SUPABASE_URL = '';
+  AppConfig.SUPABASE_ANON_KEY = '';
+
+  const storeMap = new Map();
+  globalThis.localStorage = {
+    getItem: (k) => (storeMap.has(k) ? storeMap.get(k) : null),
+    setItem: (k, v) => storeMap.set(k, String(v)),
+    removeItem: (k) => storeMap.delete(k)
+  };
+
+  try {
+    AppStore.resetDemoData();
+    const adminSession = await AppStore.signIn('admin', 'Admin@1234');
+
+    // 1. Cipta & sunting pengguna beserta gred SSPA
+    const created = await AppStore.adminCreateUser({
+      username: 'salma.ukur',
+      password: 'JupemUser#26',
+      full_name: 'Salma binti Ukur',
+      department: 'Seksyen Penawanan Data',
+      position: 'Penolong Juruukur',
+      grade: 'JA5',
+      role: 'staff'
+    });
+    assert.equal(created.grade, 'JA5');
+
+    const updated = await AppStore.adminUpdateUser({
+      user_id: created.id,
+      full_name: 'Salma binti Ukur (Kanan)',
+      department: 'Seksyen Pangkalan Data Topografi',
+      position: 'Juruukur',
+      grade: 'J9',
+      role: 'staff'
+    }, adminSession.profile.id);
+    assert.equal(updated.department, 'Seksyen Pangkalan Data Topografi');
+    assert.equal(updated.grade, 'J9');
+
+    // 2. Pengumuman bertarikh tamat (sudah tamat vs masih sah)
+    const pastIso = new Date(Date.now() - 3600 * 1000).toISOString();
+    const futureIso = new Date(Date.now() + 86400 * 1000).toISOString();
+    await AppStore.adminCreateAnnouncement({
+      title: 'Sudah Tamat',
+      message: 'Tidak patut muncul di ticker.',
+      level: 'info',
+      expires_at: pastIso,
+      is_active: true
+    }, adminSession.profile.id);
+    await AppStore.adminCreateAnnouncement({
+      title: 'Masih Sah',
+      message: 'Patut muncul di ticker.',
+      level: 'warning',
+      expires_at: futureIso,
+      is_active: true
+    }, adminSession.profile.id);
+
+    const activePublic = await AppStore.getPublicAnnouncements();
+    assert.equal(activePublic.some((a) => a.title === 'Sudah Tamat'), false);
+    assert.equal(activePublic.some((a) => a.title === 'Masih Sah'), true);
+
+    // 3. Rekod kitaran 2026 & buka kitaran baharu 2027 tanpa hilangkan sejarah 2026
+    await AppStore.upsertMyDeclaration(created.id, {
+      full_name: 'Salma binti Ukur (Kanan)',
+      ic_number: '910515-12-5222',
+      department: 'Seksyen Pangkalan Data Topografi',
+      position: 'Juruukur',
+      grade: 'J9',
+      health_status: 'Sihat',
+      confirmed_accurate: true
+    }, '2026');
+
+    const newCycle = await AppStore.adminStartNewCycle('2027', 'Kitaran Pengisytiharan 2027');
+    assert.equal(newCycle.cycle_code, '2027');
+    assert.equal(newCycle.is_active, true);
+
+    const rows2027 = await AppStore.getAdminDashboardData('2027');
+    assert.equal(rows2027.every((r) => r.has_declared === false), true);
+    const rows2026 = await AppStore.getAdminDashboardData('2026');
+    const salma2026 = rows2026.find((r) => r.profile.id === created.id);
+    assert.equal(salma2026.has_declared, true);
+    assert.equal(salma2026.grade, 'J9');
+
+    // Hantar pengisytiharan kitaran 2027 -> kedua-dua rekod wujud dalam sejarah
+    await AppStore.upsertMyDeclaration(created.id, {
+      full_name: 'Salma binti Ukur (Kanan)',
+      ic_number: '910515-12-5222',
+      department: 'Seksyen Pangkalan Data Topografi',
+      position: 'Juruukur',
+      grade: 'J10',
+      health_status: 'Dalam Pemantauan / Rawatan',
+      other_conditions: 'Pemeriksaan berkala.',
+      confirmed_accurate: true
+    }, '2027');
+
+    const hist = await AppStore.getUserDeclarationHistory(created.id);
+    assert.equal(hist.length, 2);
+    assert.equal(hist[0].cycle_code, '2027');
+    assert.equal(hist[0].grade, 'J10');
+    assert.equal(hist[1].cycle_code, '2026');
+    assert.equal(hist[1].grade, 'J9');
+
+    assert.equal(AppI18n.t('exportHeaders', null, 'ms').length, 20);
+    assert.equal(AppI18n.t('exportHeaders', null, 'en').length, 20);
+  } finally {
+    AppConfig.SUPABASE_URL = origUrl;
+    AppConfig.SUPABASE_ANON_KEY = origKey;
+    delete globalThis.localStorage;
+  }
+});
+
 

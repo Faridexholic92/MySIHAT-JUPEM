@@ -12,9 +12,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="MySIHAT" />
   <link rel="canonical" href="https://mysihatjupem.dpdns.org/" />
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=20261127b" />
-  <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png?v=20261127b" />
-  <link rel="manifest" href="/site.webmanifest?v=20261127b" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=20261127c" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png?v=20261127c" />
+  <link rel="manifest" href="/site.webmanifest?v=20261127c" />
 
   <meta property="og:type" content="website" />
   <meta property="og:locale" content="ms_MY" />
@@ -22,28 +22,28 @@
   <meta property="og:title" content="MySIHAT-JUPEM — Sistem Pengisytiharan Kesihatan Kakitangan" />
   <meta property="og:description" content="Portal rasmi pengisytiharan dan pemantauan rekod kesihatan dalaman kakitangan JUPEM." />
   <meta property="og:url" content="https://mysihatjupem.dpdns.org/" />
-  <meta property="og:image" content="https://mysihatjupem.dpdns.org/assets/icon-512.png?v=20261127b" />
+  <meta property="og:image" content="https://mysihatjupem.dpdns.org/assets/icon-512.png?v=20261127c" />
   <meta property="og:image:width" content="512" />
   <meta property="og:image:height" content="512" />
   <meta property="og:image:alt" content="Logo Rasmi MySIHAT JUPEM Sabah" />
   <meta name="twitter:card" content="summary" />
   <meta name="twitter:title" content="MySIHAT-JUPEM — Sistem Pengisytiharan Kesihatan Kakitangan" />
   <meta name="twitter:description" content="Portal rasmi pengisytiharan dan pemantauan rekod kesihatan dalaman kakitangan JUPEM." />
-  <meta name="twitter:image" content="https://mysihatjupem.dpdns.org/assets/icon-512.png?v=20261127b" />
+  <meta name="twitter:image" content="https://mysihatjupem.dpdns.org/assets/icon-512.png?v=20261127c" />
 
-  <link rel="stylesheet" href="css/styles.css?v=20261127b" />
+  <link rel="stylesheet" href="css/styles.css?v=20261127c" />
   <script
     src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.2/dist/umd/supabase.min.js"
     integrity="sha384-7i/4BYWz4Mn+lJfg2HWfEPfZQ7tmFKF3CTSKlXBpxWjNlLjcg+T6smpHG4gLmU1u"
     crossorigin="anonymous"
     defer
   ></script>
-  <script src="js/config.js?v=20261127b" defer></script>
-  <script src="js/i18n.js?v=20261127b" defer></script>
-  <script src="js/ic-parser.js?v=20261127b" defer></script>
-  <script src="js/csv-export.js?v=20261127b" defer></script>
-  <script src="js/store.js?v=20261127b" defer></script>
-  <script src="js/app.js?v=20261127b" defer></script>
+  <script src="js/config.js?v=20261127c" defer></script>
+  <script src="js/i18n.js?v=20261127c" defer></script>
+  <script src="js/ic-parser.js?v=20261127c" defer></script>
+  <script src="js/csv-export.js?v=20261127c" defer></script>
+  <script src="js/store.js?v=20261127c" defer></script>
+  <script src="js/app.js?v=20261127c" defer></script>
 </head>
 <body>
 
@@ -209,6 +209,12 @@
             <button type="submit" id="btn-login-submit" class="btn btn-primary btn-block" data-i18n="loginSubmitBtn">
               Log Masuk
             </button>
+
+            <div class="login-aux-row">
+              <button type="button" id="btn-forgot-password" class="link-btn" data-i18n="forgotPwBtn">
+                Lupa Kata Laluan? (WhatsApp Pentadbir)
+              </button>
+            </div>
           </form>
 
           <div class="login-notice">
@@ -250,10 +256,14 @@
             Maklumat anda adalah sulit dan hanya dapat dilihat oleh anda sendiri serta Pentadbir yang diberi kuasa.
           </p>
         </div>
-        <div id="staff-submission-badge"></div>
+        <div class="staff-head-badges">
+          <span id="staff-cycle-badge" class="badge badge-teal hidden"></span>
+          <div id="staff-submission-badge"></div>
+        </div>
       </div>
 
       <div id="staff-status-banner" class="alert alert-info hidden"></div>
+      <div id="staff-prefill-notice" class="alert alert-warning hidden"></div>
 
       <div id="staff-stepper" class="stepper-card card" role="tablist" aria-label="Langkah Pengisian">
         <div class="stepper-track" aria-hidden="true">
@@ -362,6 +372,19 @@
               </datalist>
             </div>
             <div class="field">
+              <label for="hf-phone" data-i18n="phoneLabel">Nombor Telefon Bimbit</label>
+              <input
+                type="tel"
+                id="hf-phone"
+                name="phone"
+                data-i18n-placeholder="phonePlaceholder"
+                placeholder="Contoh: 012-3456789"
+              />
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="field">
               <label for="hf-position" data-i18n="positionLabel">Jawatan</label>
               <input
                 type="text"
@@ -387,17 +410,16 @@
                 <option value="Pegawai Khidmat Pelanggan"></option>
               </datalist>
             </div>
-          </div>
-
-          <div class="field">
-            <label for="hf-phone" data-i18n="phoneLabel">Nombor Telefon Bimbit</label>
-            <input
-              type="tel"
-              id="hf-phone"
-              name="phone"
-              data-i18n-placeholder="phonePlaceholder"
-              placeholder="Contoh: 012-3456789"
-            />
+            <div class="field">
+              <label for="hf-grade" data-i18n="gradeLabel">Gred Jawatan (SSPA)</label>
+              <input
+                type="text"
+                id="hf-grade"
+                name="grade"
+                data-i18n-placeholder="gradePlaceholder"
+                placeholder="Taip gred anda (cth: J9, JA5, N5)"
+              />
+            </div>
           </div>
 
           <div id="hf-step1-error" class="alert alert-error hidden" role="alert"></div>
@@ -552,6 +574,15 @@
           </div>
         </div>
       </form>
+      <div id="staff-history-card" class="card history-card hidden">
+        <div class="history-card-head">
+          <div>
+            <h2 class="ann-card-heading" data-i18n="staffHistoryTitle">Sejarah Pengisytiharan Saya</h2>
+            <p class="muted-sm" data-i18n="staffHistoryDesc">Rekod arkib setiap penghantaran dan kemas kini yang pernah dibuat.</p>
+          </div>
+        </div>
+        <div id="staff-history-list" class="history-list"></div>
+      </div>
     </section>
 
     <section id="view-admin" class="admin-shell hidden">
@@ -633,6 +664,12 @@
             </p>
           </div>
           <div class="admin-head-actions">
+            <select id="admin-cycle-select" class="select-input select-cycle" aria-label="Pilih kitaran pengisytiharan">
+              <option value="2026">2026</option>
+            </select>
+            <button type="button" id="btn-open-new-cycle" class="btn btn-sm btn-outline" data-i18n="startNewCycleBtn">
+              + Kitaran Baharu
+            </button>
             <button type="button" id="btn-refresh-admin" class="btn btn-sm btn-outline" data-i18n="refreshBtn">
               Muat Semula
             </button>
@@ -764,6 +801,12 @@
         </div>
 
         <div id="admin-tab-declarations" class="card table-card">
+          <div id="print-report-header" class="print-only-header">
+            <div class="print-agency" data-i18n="printHeaderAgency">JABATAN UKUR DAN PEMETAAN MALAYSIA (JUPEM)</div>
+            <div class="print-division" data-i18n="printHeaderDivision">BAHAGIAN PEMETAAN TOPOGRAFI SABAH</div>
+            <div class="print-title" data-i18n="printHeaderTitle">SENARAI REKOD PENGISYTIHARAN KESIHATAN KAKITANGAN</div>
+            <div id="print-report-meta" class="print-meta"></div>
+          </div>
 
           <div class="section-pills-wrap">
             <div id="section-pill-bar" class="section-pill-bar"></div>
@@ -793,6 +836,9 @@
               </select>
             </div>
             <div class="toolbar-exports">
+              <button type="button" id="btn-copy-pending-emails" class="btn btn-sm btn-outline" data-i18n="copyPendingEmailsBtn">
+                Salin E-mel Belum Mengisi
+              </button>
               <button type="button" id="btn-export-csv" class="btn btn-sm btn-outline" data-i18n="exportCsvBtn">
                 CSV
               </button>
@@ -806,6 +852,7 @@
             <table class="data-table">
               <thead>
                 <tr>
+                  <th class="print-only-col" data-i18n="thNum">Bil.</th>
                   <th data-i18n="thStaff">Kakitangan</th>
                   <th data-i18n="thSection">Cawangan / Seksyen</th>
                   <th data-i18n="thIC">No. Kad Pengenalan</th>
@@ -887,10 +934,21 @@
                 <label for="ann-message"><span data-i18n="annMsgLabel">Teks Pengumuman</span> <span class="req">*</span></label>
                 <textarea id="ann-message" rows="2" data-i18n-placeholder="annMsgPlaceholder" placeholder="Tulis pengumuman yang akan dibaca oleh semua kakitangan..." required></textarea>
               </div>
-              <label class="checkbox-ack">
-                <input type="checkbox" id="ann-active-check" checked />
-                <span data-i18n="annActivateNow">Aktifkan serta-merta pada jalur ticker</span>
-              </label>
+              <div class="grid-2">
+                <div class="field">
+                  <label for="ann-expires-at" data-i18n="annExpiryLabel">Tarikh &amp; Masa Tamat Paparan (Pilihan)</label>
+                  <input type="datetime-local" id="ann-expires-at" />
+                  <small class="field-hint" data-i18n="annExpiryHint">
+                    Biarkan kosong jika tiada had masa. Pengumuman automatik hilang dari ticker selepas waktu ini.
+                  </small>
+                </div>
+                <div class="field align-end-field">
+                  <label class="checkbox-ack">
+                    <input type="checkbox" id="ann-active-check" checked />
+                    <span data-i18n="annActivateNow">Aktifkan serta-merta pada jalur ticker</span>
+                  </label>
+                </div>
+              </div>
               <div id="ann-error" class="alert alert-error hidden" role="alert"></div>
               <div>
                 <button type="submit" id="btn-publish-announcement" class="btn btn-primary btn-sm" data-i18n="annPublishBtn">
@@ -908,6 +966,7 @@
                     <th data-i18n="thAnnMessage">Tajuk &amp; Teks Pengumuman</th>
                     <th data-i18n="thAnnLevel">Tahap</th>
                     <th data-i18n="thAnnStatus">Status</th>
+                    <th data-i18n="thAnnExpiry">Tamat Paparan</th>
                     <th data-i18n="thUpdatedAt">Kemas Kini</th>
                     <th class="no-print" data-i18n="thActions">Tindakan</th>
                   </tr>
@@ -976,12 +1035,18 @@
           </div>
         </div>
 
-        <div class="field">
-          <label for="cu-role" data-i18n="cuRoleLabel">Peranan Akaun</label>
-          <select id="cu-role">
-            <option value="staff">Kakitangan (Isi borang sahaja)</option>
-            <option value="admin">Pentadbir (Lihat semua dan urus kakitangan)</option>
-          </select>
+        <div class="grid-2">
+          <div class="field">
+            <label for="cu-grade" data-i18n="cuGradeLabel">Gred Jawatan (SSPA)</label>
+            <input type="text" id="cu-grade" data-i18n-placeholder="cuGradePlaceholder" placeholder="Contoh: JA5 / J9 / N5" />
+          </div>
+          <div class="field">
+            <label for="cu-role" data-i18n="cuRoleLabel">Peranan Akaun</label>
+            <select id="cu-role">
+              <option value="staff">Kakitangan (Isi borang sahaja)</option>
+              <option value="admin">Pentadbir (Lihat semua dan urus kakitangan)</option>
+            </select>
+          </div>
         </div>
 
         <div class="field">
@@ -1099,6 +1164,109 @@
       <div class="modal-footer">
         <button type="button" class="btn btn-outline" data-close-modal="modal-announcement-read" data-i18n="modalCloseBtn">Tutup</button>
       </div>
+    </div>
+  </div>
+
+  <div id="modal-forgot-password" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modal-forgot-pw-title">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <h3 id="modal-forgot-pw-title" data-i18n="modalForgotPwTitle">Mohon Set Semula Kata Laluan</h3>
+        <button type="button" class="modal-close" data-close-modal="modal-forgot-password" aria-label="Tutup">&times;</button>
+      </div>
+      <form id="form-forgot-password" class="modal-body stack-md" novalidate>
+        <p class="muted-sm" data-i18n="forgotPwDesc">
+          Isi maklumat anda di bawah untuk menghantar mesej WhatsApp terus kepada Pentadbir bagi membantu set semula kata laluan anda.
+        </p>
+        <div class="field">
+          <label for="fp-full-name"><span data-i18n="fpFullNameLabel">Nama Penuh Pegawai</span> <span class="req">*</span></label>
+          <input type="text" id="fp-full-name" data-i18n-placeholder="fpFullNamePlaceholder" placeholder="Contoh: Ahmad bin Abu" required />
+        </div>
+        <div class="field">
+          <label for="fp-identifier"><span data-i18n="fpIdentifierLabel">E-mel Rasmi (@jupem.gov.my) atau ID Pengguna</span> <span class="req">*</span></label>
+          <input type="text" id="fp-identifier" data-i18n-placeholder="fpIdentifierPlaceholder" placeholder="Contoh: ahmad@jupem.gov.my atau ahmad" required />
+        </div>
+        <div class="field">
+          <label for="fp-department" data-i18n="fpDeptLabel">Seksyen / Bahagian (Pilihan)</label>
+          <input type="text" id="fp-department" list="dept-suggestions" data-i18n-placeholder="deptPlaceholder" placeholder="Contoh: Seksyen Penawanan Data" />
+        </div>
+        <div id="fp-error" class="alert alert-error hidden" role="alert"></div>
+        <div class="modal-footer-inline">
+          <button type="button" class="btn btn-outline" data-close-modal="modal-forgot-password" data-i18n="rpCancelBtn">Batal</button>
+          <button type="submit" id="btn-send-wa-reset" class="btn btn-primary" data-i18n="fpSendWaBtn">Hantar Permintaan WhatsApp</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="modal-edit-user" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modal-edit-user-title">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modal-edit-user-title" data-i18n="modalEditUserTitle">Sunting Maklumat Kakitangan</h3>
+        <button type="button" class="modal-close" data-close-modal="modal-edit-user" aria-label="Tutup">&times;</button>
+      </div>
+      <form id="form-edit-user" class="modal-body stack-md" novalidate>
+        <input type="hidden" id="eu-user-id" />
+        <div class="muted-sm mono" id="eu-username-display">-</div>
+        <div class="field">
+          <label for="eu-fullname"><span data-i18n="cuFullNameLabel">Nama Penuh Kakitangan</span> <span class="req">*</span></label>
+          <input type="text" id="eu-fullname" required />
+        </div>
+        <div class="grid-2">
+          <div class="field">
+            <label for="eu-department" data-i18n="cuDeptLabel">Cawangan / Seksyen</label>
+            <input type="text" id="eu-department" list="dept-suggestions" />
+          </div>
+          <div class="field">
+            <label for="eu-position" data-i18n="cuPositionLabel">Jawatan</label>
+            <input type="text" id="eu-position" list="position-suggestions" />
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="field">
+            <label for="eu-grade" data-i18n="cuGradeLabel">Gred Jawatan (SSPA)</label>
+            <input type="text" id="eu-grade" data-i18n-placeholder="cuGradePlaceholder" placeholder="Contoh: JA5 / J9 / N5" />
+          </div>
+          <div class="field">
+            <label for="eu-role" data-i18n="cuRoleLabel">Peranan Akaun</label>
+            <select id="eu-role">
+              <option value="staff">Kakitangan (Isi borang sahaja)</option>
+              <option value="admin">Pentadbir (Lihat semua dan urus kakitangan)</option>
+            </select>
+          </div>
+        </div>
+        <div id="eu-error" class="alert alert-error hidden" role="alert"></div>
+        <div class="modal-footer-inline">
+          <button type="button" class="btn btn-outline" data-close-modal="modal-edit-user" data-i18n="rpCancelBtn">Batal</button>
+          <button type="submit" id="btn-submit-edit-user" class="btn btn-primary" data-i18n="euSaveBtn">Simpan Perubahan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="modal-new-cycle" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modal-new-cycle-title">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <h3 id="modal-new-cycle-title" data-i18n="modalNewCycleTitle">Mulakan Kitaran Pengisytiharan Baharu</h3>
+        <button type="button" class="modal-close" data-close-modal="modal-new-cycle" aria-label="Tutup">&times;</button>
+      </div>
+      <form id="form-new-cycle" class="modal-body stack-md" novalidate>
+        <p class="muted-sm" data-i18n="ncDesc">
+          Membuka kitaran baharu akan mengekalkan semua rekod kitaran lepas dalam arkib sejarah dan memulakan pemantauan baharu daripada 0% untuk sesi ini.
+        </p>
+        <div class="field">
+          <label for="nc-code"><span data-i18n="ncCodeLabel">Kod Kitaran</span> <span class="req">*</span></label>
+          <input type="text" id="nc-code" data-i18n-placeholder="ncCodePlaceholder" placeholder="Contoh: 2027 atau 2027-S1" required />
+        </div>
+        <div class="field">
+          <label for="nc-title"><span data-i18n="ncTitleLabel">Tajuk Kitaran</span> <span class="req">*</span></label>
+          <input type="text" id="nc-title" data-i18n-placeholder="ncTitlePlaceholder" placeholder="Contoh: Kitaran Pengisytiharan 2027" required />
+        </div>
+        <div id="nc-error" class="alert alert-error hidden" role="alert"></div>
+        <div class="modal-footer-inline">
+          <button type="button" class="btn btn-outline" data-close-modal="modal-new-cycle" data-i18n="rpCancelBtn">Batal</button>
+          <button type="submit" id="btn-submit-new-cycle" class="btn btn-primary" data-i18n="ncStartBtn">Aktifkan Kitaran Baharu</button>
+        </div>
+      </form>
     </div>
   </div>
 

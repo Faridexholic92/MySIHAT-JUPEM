@@ -93,6 +93,7 @@ Deno.serve(async (req) => {
       const fullName = String(body.full_name || '').trim();
       const department = String(body.department || '').trim() || null;
       const position = String(body.position || '').trim() || null;
+      const grade = String(body.grade || '').trim() || null;
       const role = body.role === 'admin' ? 'admin' : 'staff';
       const emailDomain = String(body.email_domain || 'jupem.gov.my').trim().toLowerCase();
       const rawEmail = String(body.email || '').trim().toLowerCase();
@@ -129,7 +130,7 @@ Deno.serve(async (req) => {
         password,
         email_confirm: true,
         app_metadata: { role, must_change_password: true },
-        user_metadata: { username, full_name: fullName, department, position }
+        user_metadata: { username, full_name: fullName, department, position, grade }
       });
 
       if (createErr || !created?.user) {
@@ -147,6 +148,7 @@ Deno.serve(async (req) => {
           full_name: fullName,
           department,
           position,
+          grade,
           role,
           is_active: true,
           must_change_password: true
@@ -227,6 +229,84 @@ Deno.serve(async (req) => {
         return jsonResponse(req, { error: delErr.message }, 400);
       }
       return jsonResponse(req, { success: true }, 200);
+    }
+
+    if (action === 'update_user') {
+      const userId = String(body.user_id || '').trim();
+      const fullName = String(body.full_name || '').trim();
+      const department = String(body.department || '').trim() || null;
+      const position = String(body.position || '').trim() || null;
+      const grade = String(body.grade || '').trim() || null;
+      const role = body.role === 'admin' ? 'admin' : 'staff';
+
+      if (!userId) {
+        return jsonResponse(req, { error: 'ID pengguna diperlukan.' }, 400);
+      }
+      if (!fullName) {
+        return jsonResponse(req, { error: 'Nama Penuh diperlukan.' }, 400);
+      }
+      if (userId === callerProfile.id && role !== 'admin') {
+        return jsonResponse(req, { error: 'Anda tidak boleh menurunkan peranan akaun anda sendiri.' }, 400);
+      }
+
+      const { data: targetUserRes } = await supabaseAdmin.auth.admin.getUserById(userId);
+      const existingAppMeta = targetUserRes?.user?.app_metadata || {};
+      const existingUserMeta = targetUserRes?.user?.user_metadata || {};
+
+      const { error: authUpdErr } = await supabaseAdmin.auth.admin.updateUserById(userId, {
+        app_metadata: { ...existingAppMeta, role },
+        user_metadata: {
+          ...existingUserMeta,
+          full_name: fullName,
+          department,
+          position,
+          grade
+        }
+      });
+      if (authUpdErr) {
+        return jsonResponse(req, { error: authUpdErr.message }, 400);
+      }
+
+      const { data: updatedProfile, error: profUpdErr } = await supabaseAdmin
+        .from('profiles')
+        .update({
+          full_name: fullName,
+          department,
+          position,
+          grade,
+          role
+        })
+        .eq('id', userId)
+        .select()
+        .single();
+
+      if (profUpdErr) {
+        return jsonResponse(req, { error: profUpdErr.message }, 400);
+      }
+
+      const { data: activeCycle } = await supabaseAdmin
+        .from('declaration_cycles')
+        .select('cycle_code')
+        .eq('is_active', true)
+        .maybeSingle();
+
+      const declUpdateQuery = supabaseAdmin
+        .from('health_declarations')
+        .update({
+          full_name: fullName,
+          department,
+          position,
+          grade
+        })
+        .eq('user_id', userId);
+
+      if (activeCycle?.cycle_code) {
+        await declUpdateQuery.eq('cycle_code', activeCycle.cycle_code);
+      } else {
+        await declUpdateQuery;
+      }
+
+      return jsonResponse(req, { user: updatedProfile }, 200);
     }
 
     return jsonResponse(req, { error: 'Tindakan tidak dikenali.' }, 400);

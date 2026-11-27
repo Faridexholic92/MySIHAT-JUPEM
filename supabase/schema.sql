@@ -25,6 +25,7 @@ create table if not exists public.profiles (
   full_name text,
   department text,
   position text,
+  grade text,
   role text not null default 'staff' check (role in ('staff', 'admin')),
   is_active boolean not null default true,
   must_change_password boolean not null default true,
@@ -34,6 +35,7 @@ create table if not exists public.profiles (
 
 alter table public.profiles add column if not exists email text;
 alter table public.profiles add column if not exists position text;
+alter table public.profiles add column if not exists grade text;
 alter table public.profiles add column if not exists must_change_password boolean not null default true;
 
 create index if not exists idx_profiles_username on public.profiles(username);
@@ -41,10 +43,29 @@ create index if not exists idx_profiles_email on public.profiles(email);
 create index if not exists idx_profiles_role on public.profiles(role);
 create index if not exists idx_profiles_position on public.profiles(position);
 
--- 2. Jadual Deklarasi Kesihatan Kakitangan (satu rekod terkini bagi setiap kakitangan)
+-- 2. Jadual Kitaran Pengisytiharan Berkala (cth: 2026, 2027)
+create table if not exists public.declaration_cycles (
+  id uuid primary key default gen_random_uuid(),
+  cycle_code text unique not null,
+  title text not null,
+  is_active boolean not null default false,
+  started_at timestamptz not null default now(),
+  created_by uuid references public.profiles(id) on delete set null
+);
+
+create unique index if not exists idx_one_active_declaration_cycle
+  on public.declaration_cycles (is_active)
+  where (is_active = true);
+
+insert into public.declaration_cycles (cycle_code, title, is_active)
+select '2026', 'Kitaran Pengisytiharan 2026', true
+where not exists (select 1 from public.declaration_cycles);
+
+-- 3. Jadual Deklarasi Kesihatan Kakitangan (satu rekod terkini bagi setiap kakitangan per kitaran)
 create table if not exists public.health_declarations (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid unique not null references public.profiles(id) on delete cascade,
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  cycle_code text not null default '2026',
   full_name text not null,
   ic_number text not null check (ic_number ~ '^\d{12}$'),
   birth_date date not null,
@@ -52,6 +73,7 @@ create table if not exists public.health_declarations (
   gender text not null check (gender in ('Lelaki', 'Perempuan')),
   department text,
   position text,
+  grade text,
   phone text,
   health_status text not null check (
     health_status in ('Sihat', 'Mempunyai Masalah Kesihatan', 'Dalam Pemantauan / Rawatan')
@@ -63,13 +85,44 @@ create table if not exists public.health_declarations (
   notes text,
   confirmed_accurate boolean not null default true,
   submitted_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  constraint health_declarations_user_cycle_unique unique (user_id, cycle_code)
 );
 
 alter table public.health_declarations add column if not exists position text;
+alter table public.health_declarations add column if not exists grade text;
+alter table public.health_declarations add column if not exists cycle_code text not null default '2026';
 
 create index if not exists idx_health_user_id on public.health_declarations(user_id);
+create index if not exists idx_health_cycle_code on public.health_declarations(cycle_code);
 create index if not exists idx_health_status on public.health_declarations(health_status);
+
+-- 3b. Jadual Arkib Sejarah Deklarasi (merekod setiap penghantaran dan kemas kini)
+create table if not exists public.health_declaration_history (
+  id uuid primary key default gen_random_uuid(),
+  declaration_id uuid,
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  cycle_code text not null,
+  full_name text not null,
+  ic_number text not null,
+  birth_date date not null,
+  age integer not null,
+  gender text not null,
+  department text,
+  position text,
+  grade text,
+  phone text,
+  health_status text not null,
+  conditions text[] not null default '{}',
+  other_conditions text,
+  medications text,
+  emergency_contact text,
+  notes text,
+  submitted_at timestamptz not null,
+  recorded_at timestamptz not null default now()
+);
+
+create index if not exists idx_hd_history_user_recorded on public.health_declaration_history(user_id, recorded_at desc);
 
 -- 3. Fungsi pembantu updated_at
 create or replace function public.set_updated_at()
@@ -91,6 +144,31 @@ drop trigger if exists trg_health_updated_at on public.health_declarations;
 create trigger trg_health_updated_at
   before update on public.health_declarations
   for each row execute function public.set_updated_at();
+
+create or replace function public.log_health_declaration_history()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into public.health_declaration_history (
+    declaration_id, user_id, cycle_code, full_name, ic_number, birth_date, age, gender,
+    department, position, grade, phone, health_status, conditions, other_conditions,
+    medications, emergency_contact, notes, submitted_at, recorded_at
+  ) values (
+    new.id, new.user_id, new.cycle_code, new.full_name, new.ic_number, new.birth_date, new.age, new.gender,
+    new.department, new.position, new.grade, new.phone, new.health_status, new.conditions, new.other_conditions,
+    new.medications, new.emergency_contact, new.notes, new.submitted_at, now()
+  );
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_health_declaration_history on public.health_declarations;
+create trigger trg_health_declaration_history
+  after insert or update on public.health_declarations
+  for each row execute function public.log_health_declaration_history();
 
 -- 4. Fungsi semakan peranan (SECURITY DEFINER supaya tiada rekursi RLS)
 create or replace function public.is_admin()
@@ -137,6 +215,7 @@ declare
   v_full_name text;
   v_department text;
   v_position text;
+  v_grade text;
   v_role text;
   v_must_change boolean;
 begin
@@ -147,17 +226,19 @@ begin
   v_full_name := nullif(trim(new.raw_user_meta_data->>'full_name'), '');
   v_department := nullif(trim(new.raw_user_meta_data->>'department'), '');
   v_position := nullif(trim(new.raw_user_meta_data->>'position'), '');
+  v_grade := nullif(trim(new.raw_user_meta_data->>'grade'), '');
   v_role := case
     when new.raw_app_meta_data->>'role' = 'admin' then 'admin'
     else 'staff'
   end;
   v_must_change := coalesce((new.raw_app_meta_data->>'must_change_password')::boolean, true);
 
-  insert into public.profiles (id, username, email, full_name, department, position, role, is_active, must_change_password)
-  values (new.id, v_username, lower(new.email), v_full_name, v_department, v_position, v_role, true, v_must_change)
+  insert into public.profiles (id, username, email, full_name, department, position, grade, role, is_active, must_change_password)
+  values (new.id, v_username, lower(new.email), v_full_name, v_department, v_position, v_grade, v_role, true, v_must_change)
   on conflict (id) do update
     set email = coalesce(excluded.email, public.profiles.email),
-        position = coalesce(nullif(public.profiles.position, ''), excluded.position);
+        position = coalesce(nullif(public.profiles.position, ''), excluded.position),
+        grade = coalesce(nullif(public.profiles.grade, ''), excluded.grade);
 
   return new;
 end;
@@ -236,6 +317,72 @@ $$;
 revoke all on function public.complete_first_password_change() from public;
 grant execute on function public.complete_first_password_change() to authenticated;
 
+-- 7b. Kitaran Pengisytiharan: Polisi RLS & RPC Mulakan Kitaran Baharu
+alter table public.declaration_cycles enable row level security;
+alter table public.health_declaration_history enable row level security;
+
+drop policy if exists "cycles_select_active_users" on public.declaration_cycles;
+create policy "cycles_select_active_users"
+  on public.declaration_cycles
+  for select
+  to authenticated
+  using (public.is_active_user() or public.is_admin());
+
+drop policy if exists "cycles_admin_manage" on public.declaration_cycles;
+create policy "cycles_admin_manage"
+  on public.declaration_cycles
+  for all
+  to authenticated
+  using (public.is_admin())
+  with check (public.is_admin());
+
+drop policy if exists "history_select_own_or_admin" on public.health_declaration_history;
+create policy "history_select_own_or_admin"
+  on public.health_declaration_history
+  for select
+  to authenticated
+  using ((auth.uid() = user_id and public.is_active_user()) or public.is_admin());
+
+create or replace function public.start_new_declaration_cycle(p_cycle_code text, p_title text)
+returns public.declaration_cycles
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_code text;
+  v_title text;
+  v_row public.declaration_cycles;
+begin
+  if not public.is_admin() then
+    raise exception 'Hanya Pentadbir dibenarkan memulakan kitaran pengisytiharan baharu.';
+  end if;
+
+  v_code := trim(coalesce(p_cycle_code, ''));
+  v_title := trim(coalesce(p_title, ''));
+  if v_code = '' or v_title = '' then
+    raise exception 'Kod dan tajuk kitaran diperlukan.';
+  end if;
+
+  update public.declaration_cycles
+  set is_active = false
+  where is_active = true;
+
+  insert into public.declaration_cycles (cycle_code, title, is_active, started_at, created_by)
+  values (v_code, v_title, true, now(), auth.uid())
+  on conflict (cycle_code) do update
+    set title = excluded.title,
+        is_active = true,
+        started_at = now()
+  returning * into v_row;
+
+  return v_row;
+end;
+$$;
+
+revoke all on function public.start_new_declaration_cycle(text, text) from public;
+grant execute on function public.start_new_declaration_cycle(text, text) to authenticated;
+
 -- 8. Jadual Pengumuman (Ticker) & Polisi RLS
 create table if not exists public.announcements (
   id uuid primary key default gen_random_uuid(),
@@ -243,10 +390,13 @@ create table if not exists public.announcements (
   message text not null,
   level text not null default 'info' check (level in ('info', 'warning', 'urgent')),
   is_active boolean not null default true,
+  expires_at timestamptz,
   created_by uuid references public.profiles(id) on delete set null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.announcements add column if not exists expires_at timestamptz;
 
 drop trigger if exists trg_announcements_updated_at on public.announcements;
 create trigger trg_announcements_updated_at
@@ -260,7 +410,7 @@ create policy "announcements_select_active_or_admin"
   on public.announcements
   for select
   to anon, authenticated
-  using (is_active = true or public.is_admin());
+  using ((is_active = true and (expires_at is null or expires_at > now())) or public.is_admin());
 
 drop policy if exists "announcements_insert_admin" on public.announcements;
 create policy "announcements_insert_admin"
